@@ -13,7 +13,10 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-
+The EASY SOLR Search Index is a configured [Apache SOLR Service] that contains an index of the metadata stored
+in the Fedora Commons Repository at the dataset level. This command extracts the required metadata from the 
+Fedora Commons Repository and sends it to the EASY SOLR Search Index to add or update the record for the specified
+dataset(s)
 
 ARGUMENTS
 ---------
@@ -65,3 +68,4 @@ Steps:
         mvn install
 
 
+[Apache SOLR Service]: https://lucene.apache.org/solr/
