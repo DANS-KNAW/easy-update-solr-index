@@ -6,8 +6,8 @@ Update the EASY SOLR Search Index with metadata from Fedora.
 SYNOPSIS
 --------
 
-    easy-update-solr-index [-u <user> -p <password>][-f <fcrepo-server>][-s <solr-server>] \
-       <easy-dataset-pid>...
+    easy-update-solr-index [-u <user> -p <password>][-f <fcrepo-server>][-s <solr-server-request-handler>] \
+       [-x <output-xml-dir>] <easy-dataset-pid>...
 
 
 DESCRIPTION
@@ -24,7 +24,8 @@ ARGUMENTS
 * ``-u``, ``--user`` -- Fedora user to connect with
 * ``-p``, ``--password`` -- password of the Fedora user
 * ``-f``, ``--fcrepo-server`` -- URL of the Fedora Commons Repository server
-* ``-s``, ``--solr-server`` -- URL of the EASY SOLR Search Index server
+* ``-s``, ``--solr-server-request-handler`` -- URL of the EASY SOLR Search Index server request handler
+* ``-x``, ``--output-xml-dir`` -- directory to write the documents to be sent to SOLR to
 * ``<easy-datataset-pid>...`` -- one or more dataset PIDs 
 
 
@@ -35,14 +36,14 @@ INSTALLATION AND CONFIGURATION
 
 1. Unzip the tarball to a directory of your choice, e.g. /opt/
 2. A new directory called easy-update-solr-index-<version> will be created
-3. Create an environment variabele ``EASY_UPDATE-SOLR_INDEX_HOME`` with the directory from step 2 as its value
-4. Add ``$EASY_UPDATE-SOLR_INDEX_HOME/bin`` to your ``PATH`` environment variable.
+3. Create an environment variabele ``EASY_UPDATE_SOLR_INDEX_HOME`` with the directory from step 2 as its value
+4. Add ``$EASY_UPDATE_SOLR_INDEX_HOME/bin`` to your ``PATH`` environment variable.
 
 
 ### Configuration
 
-General configuration settings can be set in ``$EASY_UPDATE-SOLR_INDEX_HOME/cfg/application.properties`` and 
-logging can be configured in ``$EASY_UPDATE-SOLR_INDEX_HOME/cfg/logback.xml``. The available settings are explained in
+General configuration settings can be set in ``$EASY_UPDATE_SOLR_INDEX_HOME/cfg/application.properties`` and 
+logging can be configured in ``$EASY_UPDATE_SOLR_INDEX_HOME/cfg/logback.xml``. The available settings are explained in
 comments in aforementioned files.
 
 
