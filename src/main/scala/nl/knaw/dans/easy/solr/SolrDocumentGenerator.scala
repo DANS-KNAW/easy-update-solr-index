@@ -1,7 +1,7 @@
 package nl.knaw.dans.easy.solr
 
+
 import scala.xml._
-import org.apache.commons.lang.StringUtils._
 
 class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
   val DC_NAMESPACE: String = "http://purl.org/dc/elements/1.1/"
@@ -10,60 +10,67 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
   val dc = XML.loadString(fedora.getDc(pid))
   val emd = XML.loadString(fedora.getEmd(pid))
   val amd = XML.loadString(fedora.getAmd(pid))
+  val prsl = XML.loadString(fedora.getPrsql(pid))
+//  val relsExt = XML.loadString(fedora.getRelsExt(pid))
 
-  val fields = List(
-    "dc_title" -> (emd \\ "title" \ "title").map(_.text),
-    "dc_description" ->  (emd \\ "description" \ "description").map(_.text),
-    "dc_creator" -> (emd \\ "creator" \ "creator").map(normalizeAuthor(_)),
-    "dc_subject" -> (emd \\ "subject" \ "subject").map(_.text),
-    "dc_publisher" -> (emd \\ "publisher" \ "publisher").map(_.text),
-    "dc_contributor" -> (emd \\ "contributor" \ "contributor").map(normalizeAuthor(_)),
-    "dc_date" -> (emd \\  "date" \ "date")
+  val dcMappings: Seq[(String, Seq[String])] = List("title", "description", "creator", "subject", "publisher",
+    "contributor", "date", "type", "format", "identifier", "source", "language", "relation",
+    "coverage", "rights")
+    .map(s => (s"dc_${s}" -> (dc \\ s).map(_.text)))
 
+  val dcMappingsSort = List("title", "creator", "publisher", "contributor")
+    .map(s => (s"dc_${s}_s" -> (dc \\ s).map(_.text)))
 
-  def normalizeAuthor(creator: Node): String = {
-    def surnameString = creator \\ "surname" match {
-      case NodeSeq.Empty => ""
-      case n => n.text
+  val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
+    .map(s => (s"emd_date_${s}" -> (emd \ "date" \ s).map(_.text)))
+
+  val emdFormattedDateMappings = List("created", "available")
+    .map(s => (s"emd_date_${s}_formatted" -> (emd \ "date" \ s).map(n => IsoDate.format(n.text, getPrecision(n)))))
+
+  def getPrecision(n: Node): String =
+    n.attribute("format") match {
+      case Some(ns) => if(ns.size > 0) ns(0).text else ""
+      case None => ""
     }
-    def titleInitialsPrefixOrganizationString =
-      (List("title", "initials", "prefix")
-      .map(creator \\ _)
-      .map(_.text)
-        :+ organizationString)
-      .filter(isNotBlank(_))
-      .mkString(" ")
-    def organizationString = creator \\ "organization" match {
-      case NodeSeq.Empty => ""
-      case n if hasPersonalComponents => s"(${n.head.text})"
-      case n => n.head.text
-    }
-    def hasPersonalComponents =
-      List("title", "initials", "prefix", "DAI").flatMap(creator \\ _).exists( n => isNotBlank(n.text))
 
-    if(creator.namespace == DC_NAMESPACE) creator.text
-    else if(creator.namespace == EAS_NAMESPACE)
-      List(surnameString, titleInitialsPrefixOrganizationString).filter(isNotBlank(_)).mkString(", ")
-    else throw new RuntimeException(s"Invalid creator $creator")
-  }
+  val otherMappings =
+      List("amd_assignee_id" -> (amd \ "workflowData" \ "assigneeId").map(_.text),
+        "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
+        "amd_workflow_progress" -> (amd \ "datasetState").map(_.text),
+        "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
+        "psl_permission_status" -> (prsl \ "sequences" \\ "sequence").map(formatPrslString(_)),
+        "archaeology_dc_subject" -> (emd \ "subject" \ "subject").filter(_.attribute("schemeId") match {
+          case Some(nodes) => nodes.size > 0 && nodes(0).text == "archaeology.dc.subject"
+          case None => false
+        }).map(_.text),
+        "archaeology_dcterms_temporal" -> (emd \ "coverage" \ "temporal").filter(_.attribute("schemeId") match {
+          case Some(nodes) => nodes.size > 0 && nodes(0).text == "archaeology.dcterms.temporal"
+          case None => false
+        }).map(_.text)
+      )
+
+  def formatPrslString(n: Node): String =
+    List((n \ "requesterId").text, (n \ "state").text, (n \ "stateLastModified").text).mkString(" ")
+
+
 
   def toXml: Elem =
     <add>
       <doc>
         <field name="repository_id">easy</field>
         <field name="sid">{pid}</field>
-        {fields.map(f => createFieldsFor(f._1, f._2)).reduce(_ ++ _)}
+        {dcMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
+        {dcMappingsSort.map(f => createSortField(f._1, f._2)).reduce(_ ++ _)}
+        {emdDateMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
+        {otherMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
       </doc>
     </add>
-
-  def createFieldsFor(name: String, values: Seq[String]): NodeSeq =
-    createField(name, values) ++ createSortField(name, values)
 
   def createField(name: String, values: Seq[String]): NodeSeq =
     values.map(value => <field name={name}>{value}</field>)
 
   def createSortField(name: String, values: Seq[String]): NodeSeq =
     if(values.isEmpty) NodeSeq.Empty
-    else <field name={name + "_s"}>{values.mkString(" ")}</field>
+    else <field name={name}>{values.mkString(" ")}</field>
 
 }
