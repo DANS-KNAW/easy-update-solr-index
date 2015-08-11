@@ -14,17 +14,10 @@
   * limitations under the License.
   ******************************************************************************/
 
-package nl.knaw.dans.easy.solr
+package nl.knaw.dans.easy
 
-trait FedoraProvider {
+import java.io.File
 
-  def getDc(pid: String): String
-
-  def getEmd(pid: String): String
-
-  def getAmd(pid: String): String
-
-  def getPrsql(pid: String): String
-
-  def getRelsExt(pid: String): String
+package object solr {
+  val homedir = new File(System.getenv("EASY_UPDATE_SOLR_INDEX_HOME"))
 }
