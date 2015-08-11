@@ -10,6 +10,5 @@ trait FedoraProvider {
 
   def getPrsql(pid: String): String
 
-
-
+  def getRelsExt(pid: String): String
 }
