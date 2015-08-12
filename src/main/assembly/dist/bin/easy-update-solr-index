@@ -1,0 +1,4 @@
+#!/bin/sh
+
+java -Dlogback.configurationFile=$EASY_UPDATE_SOLR_INDEX_HOME/cfg/logback.xml \
+     -jar $EASY_UPDATE_SOLR_INDEX_HOME/bin/easy-update-solr-index.jar $@

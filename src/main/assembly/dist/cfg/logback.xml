@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="PROGRAM" value="easy-update-solr-index" />
+    <property name="LOGDIR" value="/var/log/${PROGRAM}" />
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>[%-5level] %msg %n</Pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGDIR}/${PROGRAM}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOGDIR}/${PROGRAM}.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%p %d [%t] - %m%n</pattern>
+        </encoder>
+    </appender>
+    <root level="error">
+        <appender-ref ref="CONSOLE" />
+    </root>
+    <logger name="nl.knaw.dans.easy.solr" level="info">
+        <appender-ref ref="FILE" />
+    </logger>
+</configuration>
