@@ -51,14 +51,18 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   /*
    * Tests
    */
-  "minimal DC" should "result in only sid field" in {
+  "minimal DC" should "result in only standard fields" in {
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
 
     docRoot.label should be("add")
-    (docRoot \ "doc" \ "field") should have length(2)
-    (docRoot \ "doc" \ "field" \\ "@name")(1).text should be ("sid")
-    (docRoot \ "doc" \ "field")(1).text should be ("test-pid:123")
+    val fields = (docRoot \ "doc" \ "field").map(f => ((f \ "@name").text -> f.text))
+    fields should have length(5)
+    fields should contain("sid" -> "test-pid:123")
+    fields should contain("type" -> "easy-dataset")
+    fields should contain("type" -> "dataset")
+    fields should contain("repository_id" -> "easy")
+    fields should contain("amd_workflow_progress" -> "0")
   }
 
   "one DC element" should "result in normal and sortable fields" in {
@@ -70,7 +74,6 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val fields = (docRoot \ "doc" \ "field").map(f => ((f \ "@name").text -> f.text))
 
-    fields should have length(4)
     fields should contain("sid" -> "test-pid:123")
     fields should contain("dc_title" -> "Some title")
     fields should contain("dc_title_s" -> "Some title")
