@@ -33,7 +33,9 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
             |              [-f <fcrepo-server>] \\
             |              [-u <fcrepo-user> \\
             |               -p <fcrepo-password>] \\
+            |               -s <solr-update-url> \\
             |               -d
+            |               -o
             |               <dataset-pid>
             | Options:
             |""".stripMargin)
@@ -43,6 +45,8 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
       descr = "User to connect ot fcrepo-server")
   val password = opt[String]("fcrepo-password", default = Some(props.getString("default.fcrepo-password")),
       descr = "Password for fcrepo-user")
+  val solr = opt[URL]("solr-update-url", default = Some(new URL(props.getString("default.solr-update-url"))),
+      descr="URL to POST SOLR documents to")
   val debug = opt[Boolean]("debug", default = Some(false), descr = "Only generate document, do not send it to SOLR")
   val output = opt[Boolean]("output", default = Some(false), descr = "Ouput SOLR document to stdout")
   val dataset = trailArg[String]("dataset-pid", required = true, descr = "Dataset from which to take (meta-)data " +

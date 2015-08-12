@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.solr
 
 import org.slf4j.LoggerFactory
 
+import scala.util.{Failure, Success}
 import scala.xml.PrettyPrinter
 
 
@@ -27,11 +28,16 @@ object CLI {
   def main(args: Array[String]) {
     val conf = new Conf(args)
     val fedora = new FedoraProviderImpl(conf.fedora(), conf.user(), conf.password())
-    val solrDocElem = new SolrDocumentGenerator(fedora, conf.dataset()).toXml
-    val solrDocString = new PrettyPrinter(160, 2).format(solrDocElem)
+    val solrDocString = new PrettyPrinter(160, 2).format(new SolrDocumentGenerator(fedora, conf.dataset()).toXml)
     if(conf.output()) println(solrDocString)
-    if(log.isDebugEnabled) log.debug(s"Generated SOLR document for pid=${conf.dataset()}: $solrDocString")
-    log.info(s"Generated SOLR document for pid=${conf.dataset()}")
-    // TODO: Send to SOLR index and report response
+    log.info(s"Generated SOLR document for ${conf.dataset()}")
+    log.debug(s"Contents of SOLR document for ${conf.dataset()}: $solrDocString")
+    if(!conf.debug()) {
+      val solr = new SolrProviderImpl(conf.solr())
+      solr.update(solrDocString) match {
+        case Success(_) => log.info(s"Committed ${conf.dataset()} to SOLR index")
+        case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}")
+      }
+    }
   }
 }
