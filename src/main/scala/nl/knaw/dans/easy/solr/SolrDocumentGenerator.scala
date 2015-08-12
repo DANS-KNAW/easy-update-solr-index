@@ -82,10 +82,8 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
   def isRequiredAndCompletedStep(n: Node): Boolean =
      (n \ "required" match {
        case ns => ns.size > 0 && ns.text == "true"
-       case _ => false
      }) && (n \ "completed" match {
        case ns => ns.size > 0 && ns.text == "true"
-       case _ => false
      })
 
   def hasAccessRightsScheme(n: Node): Boolean =
