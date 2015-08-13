@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory
 import scala.util.{Failure, Success}
 import scala.xml.PrettyPrinter
 
-
 object CLI {
   val log = LoggerFactory.getLogger(getClass)
 

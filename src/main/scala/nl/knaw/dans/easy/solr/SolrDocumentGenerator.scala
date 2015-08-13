@@ -34,19 +34,19 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
   val dcMappings = List("title", "description", "creator", "subject", "publisher",
     "contributor", "date", "type", "format", "identifier", "source", "language", "relation",
     "coverage", "rights")
-    .map(s => (s"dc_${s}" -> (dc \ s).map(_.text)))
+    .map(s => s"dc_$s" -> (dc \ s).map(_.text))
 
   val dcMappingsSort = List("title", "creator", "publisher", "contributor")
-    .map(s => (s"dc_${s}_s" -> (dc \\ s).map(_.text)))
+    .map(s => s"dc_${s}_s" -> (dc \\ s).map(_.text))
 
   val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
-    .map(s => (s"emd_date_${s}" -> (emd \ "date" \ s).filter(_.namespace == EAS_NAMESPACE).map(n => toUtcTimestamp(n.text))))
+    .map(s => s"emd_date_${s}" -> (emd \ "date" \ s).filter(_.namespace == EAS_NAMESPACE).map(n => toUtcTimestamp(n.text)))
 
   def toUtcTimestamp(s: String): String =
     DateTime.parse(s).withZone(DateTimeZone.UTC).toString
 
   val emdFormattedDateMappings = List("created", "available")
-    .map(s => (s"emd_date_${s}_formatted" -> (emd \ "date" \ s).filter(isFormattableDate).map(n => IsoDate.format(n.text, getPrecision(n)))))
+    .map(s => s"emd_date_${s}_formatted" -> (emd \ "date" \ s).filter(isFormattableDate).map(n => IsoDate.format(n.text, getPrecision(n))))
 
   def isFormattableDate(n: Node): Boolean =
     (n.attribute(EAS_NAMESPACE, "format"), n.attribute(EAS_NAMESPACE, "scheme")) match {
@@ -57,13 +57,13 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
   def getPrecision(n: Node): String =
     n.attribute(EAS_NAMESPACE, "format") match {
       case Some(Seq(p)) => p.text
-      case None => ""
+      case _ => ""
     }
 
   val otherMappings =
       List("amd_assignee_id" -> (amd \ "workflowData" \ "assigneeId").map(_.text),
         "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
-        "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").filter(isRequiredAndCompletedStep).size.toString),
+        "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").count(isRequiredAndCompletedStep).toString),
         "ds_state" -> (amd \ "datasetState").map(_.text),
         "ds_accesscategory" -> (emd \ "rights" \ "accessRights").filter(hasAccessRightsScheme).map(_.text),
         "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
@@ -72,19 +72,17 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
         "archaeology_dcterms_temporal" -> (emd \ "coverage" \ "temporal").filter(isArchaeologyTemporal).map(_.text),
         "dai_creator" -> ((emd \\ "creator" \ "creator").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
         "dai_contributor" -> ((emd \\ "contributor" \ "contributor").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
-        "easy_collections" -> ((relsExt \\ "Description" \ "isCollectionMember")
+        "easy_collections" -> (relsExt \\ "Description" \ "isCollectionMember")
           .map(_.attribute(RDF_NAMESPACE, "resource") match {
-          case Some(attr) => attr.text
-          case _ => ""
-        }).map(_.replace("info:fedora/", "")))
-      )
+            case Some(attr) => attr.text.replace("info:fedora/", "")
+            case _ => ""
+          }))
 
-  def isRequiredAndCompletedStep(n: Node): Boolean =
-     (n \ "required" match {
-       case ns => ns.size > 0 && ns.text == "true"
-     }) && (n \ "completed" match {
-       case ns => ns.size > 0 && ns.text == "true"
-     })
+  def isRequiredAndCompletedStep(n: Node): Boolean = {
+    val required =  n \ "required"
+    val completed = n \ "completed"
+    List(required, completed).forall(p => p.nonEmpty && p.text == "true")
+  }
 
   def hasAccessRightsScheme(n: Node): Boolean =
    n.attribute(EAS_NAMESPACE, "schemeId") match {
@@ -94,7 +92,7 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
 
   def hasDaiScheme(n: Node): Boolean =
     n.attribute("scheme") match {
-      case Some(Seq(n)) => n.text == "DAI"
+      case Some(Seq(s)) => s.text == "DAI"
       case _ => false
     }
 
@@ -123,11 +121,11 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
 
         <!-- Fields based on metadata -->
         <field name="sid">{pid}</field>
-        {dcMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
-        {dcMappingsSort.map(f => createSortField(f._1, f._2)).reduce(_ ++ _)}
-        {emdDateMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
-        {emdFormattedDateMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
-        {otherMappings.map(f => createField(f._1, f._2)).reduce(_ ++ _)}
+        {dcMappings.flatMap(f => createField(f._1, f._2))}
+        {dcMappingsSort.flatMap(f => createSortField(f._1, f._2))}
+        {emdDateMappings.flatMap(f => createField(f._1, f._2))}
+        {emdFormattedDateMappings.flatMap(f => createField(f._1, f._2))}
+        {otherMappings.flatMap(f => createField(f._1, f._2))}
       </doc>
     </add>
 
