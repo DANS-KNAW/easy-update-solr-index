@@ -38,15 +38,14 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     expectRelsExt(<RDF />)
   }
 
-  private def expectDc(xml: Elem) = fedora.getDc _ expects * anyNumberOfTimes() returning(xml.toString)
-  private def expectEmd(xml: Elem) = fedora.getEmd _ expects * anyNumberOfTimes() returning(xml.toString)
-  private def expectAmd(xml: Elem) = fedora.getAmd _ expects * anyNumberOfTimes() returning(xml.toString)
-  private def expectPrsl(xml: Elem) = fedora.getPrsql _ expects * anyNumberOfTimes() returning(xml.toString)
-  private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning(xml.toString)
+  private def expectDc(xml: Elem) = fedora.getDc _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectEmd(xml: Elem) = fedora.getEmd _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectAmd(xml: Elem) = fedora.getAmd _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectPrsl(xml: Elem) = fedora.getPrsql _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning xml.toString
 
-  private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] = {
+  private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] =
     (docRoot \\ "doc" \ "field").filter(f => (f \ "@name").text == field).map(_.text)
-  }
 
   /*
    * Tests
