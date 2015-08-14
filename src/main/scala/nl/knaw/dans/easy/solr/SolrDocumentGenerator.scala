@@ -65,7 +65,7 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
         "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
         "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").count(isRequiredAndCompletedStep).toString),
         "ds_state" -> (amd \ "datasetState").map(_.text),
-        "ds_accesscategory" -> (emd \ "rights" \ "accessRights").filter(hasAccessRightsScheme).map(_.text),
+        "ds_accesscategory" -> (emd \ "rights" \ "accessRights").map(_.text),
         "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
         "psl_permission_status" -> (prsl \ "sequences" \\ "sequence").map(formatPrslString),
         "archaeology_dc_subject" -> (emd \ "subject" \ "subject").filter(isArchaeologySubject).map(_.text),
@@ -83,12 +83,6 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
     val completed = n \ "completed"
     List(required, completed).forall(p => p.nonEmpty && p.text == "true")
   }
-
-  def hasAccessRightsScheme(n: Node): Boolean =
-   n.attribute(EAS_NAMESPACE, "schemeId") match {
-     case Some(Seq(s)) => s.text == "common.dcterms.accessrights"
-     case _ => false
-   }
 
   def hasDaiScheme(n: Node): Boolean =
     n.attribute("scheme") match {
