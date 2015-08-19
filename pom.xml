@@ -8,6 +8,7 @@
     </parent>
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-update-solr-index</artifactId>
+    <name>EASY Update SOLR Index</name>
     <version>1.x-SNAPSHOT</version>
     <properties>
         <main-class>nl.knaw.dans.easy.solr.CLI</main-class>
