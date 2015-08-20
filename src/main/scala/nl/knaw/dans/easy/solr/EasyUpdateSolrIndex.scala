@@ -18,14 +18,21 @@ package nl.knaw.dans.easy.solr
 
 import org.slf4j.LoggerFactory
 
-import scala.util.{Failure, Success}
+import scala.util.{Try, Failure, Success}
 import scala.xml.PrettyPrinter
 
-object CLI {
-  val log = LoggerFactory.getLogger(getClass)
+object EasyUpdateSolrIndex {
+  private val log = LoggerFactory.getLogger(getClass)
 
   def main(args: Array[String]) {
     val conf = new Conf(args)
+    run(conf) match {
+      case Success(_) => log.info(s"Committed ${conf.dataset()} to SOLR index")
+      case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
+    }
+  }
+
+  def run(conf: Conf): Try[Unit] = Try {
     val fedora = new FedoraProviderImpl(conf.fedora(), conf.user(), conf.password())
     val solrDocString = new PrettyPrinter(160, 2).format(new SolrDocumentGenerator(fedora, conf.dataset()).toXml)
     if(conf.output()) println(solrDocString)
@@ -33,10 +40,8 @@ object CLI {
     log.debug(s"Contents of SOLR document for ${conf.dataset()}: $solrDocString")
     if(!conf.debug()) {
       val solr = new SolrProviderImpl(conf.solr())
-      solr.update(solrDocString) match {
-        case Success(_) => log.info(s"Committed ${conf.dataset()} to SOLR index")
-        case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}")
-      }
+      solr.update(solrDocString).get
     }
   }
+
 }
