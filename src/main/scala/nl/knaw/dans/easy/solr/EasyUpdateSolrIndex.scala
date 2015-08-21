@@ -26,13 +26,13 @@ object EasyUpdateSolrIndex {
 
   def main(args: Array[String]) {
     implicit val s = Settings(new Conf(args))
-    run() match {
+    run match {
       case Success(_) => log.info(s"Committed ${s.dataset} to SOLR index")
       case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
     }
   }
 
-  def run()(implicit s: Settings): Try[Unit] = Try {
+  def run(implicit s: Settings): Try[Unit] = Try {
     val fedora = new FedoraProviderImpl(s.fedoraCredentials)
     val solrDocString = new PrettyPrinter(160, 2).format(new SolrDocumentGenerator(fedora, s.dataset).toXml)
     if(s.output) println(solrDocString)
