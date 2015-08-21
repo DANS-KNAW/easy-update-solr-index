@@ -25,23 +25,21 @@ object EasyUpdateSolrIndex {
   private val log = LoggerFactory.getLogger(getClass)
 
   def main(args: Array[String]) {
-    val conf = new Conf(args)
-    run(conf) match {
-      case Success(_) => log.info(s"Committed ${conf.dataset()} to SOLR index")
+    implicit val s = Settings(new Conf(args))
+    run() match {
+      case Success(_) => log.info(s"Committed ${s.dataset} to SOLR index")
       case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
     }
   }
 
-  def run(conf: Conf): Try[Unit] = Try {
-    val fedora = new FedoraProviderImpl(conf.fedora(), conf.user(), conf.password())
-    val solrDocString = new PrettyPrinter(160, 2).format(new SolrDocumentGenerator(fedora, conf.dataset()).toXml)
-    if(conf.output()) println(solrDocString)
-    log.info(s"Generated SOLR document for ${conf.dataset()}")
-    log.debug(s"Contents of SOLR document for ${conf.dataset()}: $solrDocString")
-    if(!conf.debug()) {
-      val solr = new SolrProviderImpl(conf.solr())
-      solr.update(solrDocString).get
-    }
+  def run()(implicit s: Settings): Try[Unit] = Try {
+    val fedora = new FedoraProviderImpl(s.fedoraCredentials)
+    val solrDocString = new PrettyPrinter(160, 2).format(new SolrDocumentGenerator(fedora, s.dataset).toXml)
+    if(s.output) println(solrDocString)
+    log.info(s"Generated SOLR document for ${s.dataset}")
+    log.debug(s"Contents of SOLR document for ${s.dataset}: $solrDocString")
+    if(!s.debug)
+      new SolrProviderImpl(s.solr).update(solrDocString).get
   }
 
 }

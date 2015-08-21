@@ -16,20 +16,15 @@
 
 package nl.knaw.dans.easy.solr
 
-import java.net.URL
-
+import com.yourmediashelf.fedora.client.FedoraClient._
 import com.yourmediashelf.fedora.client.request.FedoraRequest
 import com.yourmediashelf.fedora.client.{FedoraClient, FedoraCredentials}
-import com.yourmediashelf.fedora.client.FedoraClient._
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
-class FedoraProviderImpl(server: URL, user: String, password: String) extends FedoraProvider {
+class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProvider {
   val log = LoggerFactory.getLogger(getClass)
-
-  val creds = new FedoraCredentials(server, user, password)
-  val client = new FedoraClient(creds)
-  FedoraRequest.setDefaultClient(client)
+  FedoraRequest.setDefaultClient(new FedoraClient(credentials))
 
   private def datastreamToString(pid: String, dsId: String): String = {
     val s = IOUtils.toString(getDatastreamDissemination(pid, dsId).execute().getEntityInputStream)

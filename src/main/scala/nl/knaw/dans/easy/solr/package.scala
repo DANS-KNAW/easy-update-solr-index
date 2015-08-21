@@ -19,5 +19,7 @@ package nl.knaw.dans.easy
 import java.io.File
 
 package object solr {
-  val homedir = new File(System.getenv("EASY_UPDATE_SOLR_INDEX_HOME"))
+  val homedir = try { new File(System.getenv("EASY_UPDATE_SOLR_INDEX_HOME")) }
+                catch { case t: Throwable => throw new RuntimeException(
+                    s"Unable to load EASY_UPDATE_SOLR_INDEX_HOME (${System.getenv("EASY_UPDATE_SOLR_INDEX_HOME")})", t)}
 }
