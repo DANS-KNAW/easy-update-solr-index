@@ -21,12 +21,12 @@ import java.net.URL
 import scala.util.Try
 import scalaj.http.Http
 
-class SolrProviderImpl(solrUrl: URL) extends SolrProvider {
+case class SolrProviderImpl(solrUrl: URL) extends SolrProvider {
   override def update(doc: String): Try[Unit] = Try {
     val result = Http(solrUrl.toString)
       .header("Content-Type", "application/xml")
       .param("commit", "true").postData(doc)
       .asString
-    if(result.isError) throw new RuntimeException(s"SOLR Update failed: ${result.statusLine}, details: ${result.body}")
+    if(result.isError) throw new RuntimeException(s"${result.statusLine}, details: ${result.body}")
   }
 }
