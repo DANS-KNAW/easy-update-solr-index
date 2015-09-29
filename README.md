@@ -8,7 +8,7 @@ SYNOPSIS
 
     easy-update-solr-index [<option>...] -q <fcrepo-query>...
     easy-update-solr-index [<option>...] -d <dataset-id>...
-    easy-update-solr-index [<option>...] -i <text-file-with-dataset-id-per-line>
+    easy-update-solr-index [<option>...] --file <text-file-with-dataset-id-per-line>
 
 
 DESCRIPTION
@@ -23,15 +23,15 @@ dataset(s)
 ARGUMENTS
 ---------
 
-      -a, --apply-updates               If omitted: only generate document(s), do not
-                                        send anything to SOLR
-      -b, --dataset-batch-size  <arg>   Number of datastes to read at once from the
+      -b, --dataset-batch-size  <arg>   Number of datasets to read at once from the
                                         dataset-query (default = 100)
       -i, --dataset-id  <arg>...        ID of dataset to update, for eaxample:
                                         easy-dataset:1
       -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a
                                         dataset to avoid reducing performance of the
                                         production system too much (default = 1000)
+      -d, --debug                       If specified: only generate document(s), do
+                                        not send anything to SOLR
       -p, --fcrepo-password  <arg>      Password for fcrepo-user (default = )
       -q, --fcrepo-query  <arg>...      Fedora query that selects datasets, query
                                         example: 'pid~easy-dataset:*'. see also help

@@ -9,7 +9,7 @@ object Settings {
   def apply(conf: Conf): Settings = new Settings(
     batchSize = conf.batchSize.apply(),
     timeout = conf.timeout.apply(),
-    testMode = !conf.applyUpdates(),
+    testMode = conf.debug(),
     output = conf.output(),
     input = conf.input.get,
     datasetQuery = conf.datasetQuery.get,

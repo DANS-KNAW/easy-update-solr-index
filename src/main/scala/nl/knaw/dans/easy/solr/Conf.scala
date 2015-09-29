@@ -43,7 +43,7 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
             | Usage:
             |    $printedName [<option>...] -q <fcrepo-query>...
             |    $printedName [<option>...] -d <dataset-id>...
-            |    $printedName [<option>...] -i <text-file-with-dataset-id-per-line>
+            |    $printedName [<option>...] --file <text-file-with-dataset-id-per-line>
             |
             | Defaults provided by: ${if (propsFile.exists()) propsFile.getCanonicalPath else "-"}
             |
@@ -65,16 +65,16 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
         "default.solr-update-url",
         "http://localhost:8080/solr"))),
       descr="URL to POST SOLR documents to")
-  val applyUpdates = opt[Boolean]("apply-updates", short = 'a',
+  val debug = opt[Boolean]("debug", short = 'd',
       default = Some(false),
-      descr = "If omitted: only generate document(s), do not send anything to SOLR")
+      descr = "If specified: only generate document(s), do not send anything to SOLR")
   val output = opt[Boolean]("output",  short = 'o',
       default = Some(false),
       descr = "If provided: output SOLR document(s) to stdout")
   val batchSize = opt[Int]("dataset-batch-size",  short = 'b',default = Some(props.getInt(
     "default.dataset.batch-size",
     100)),
-    descr = "Number of datastes to read at once from the dataset-query")
+    descr = "Number of datasets to read at once from the dataset-query")
   val timeout = opt[Int]("dataset-timeout", short = 't', default = Some(props.getInt(
     "default.dataset.timeout",
     1000)),
