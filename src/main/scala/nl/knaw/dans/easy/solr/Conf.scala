@@ -26,15 +26,14 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
 
   printedName = "easy-update-solr-index"
 
-  def getHomeDir: String = System.getenv(printedName.toUpperCase)
+  def getHomeDir: String = System.getProperty("app.homedir")
 
   val propsFile = new File(
     getHomeDir match { case null => "." case s => s},
     "cfg/application.properties"
   )
-  val props = if (propsFile.exists())
-    new PropertiesConfiguration(propsFile)
-  else new PropertiesConfiguration()
+  val props = if (propsFile.exists) new PropertiesConfiguration(propsFile)
+              else new PropertiesConfiguration()
 
   version(s"$printedName ${Version()}")
   banner(s"""

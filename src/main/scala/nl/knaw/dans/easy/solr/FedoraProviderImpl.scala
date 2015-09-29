@@ -54,18 +54,13 @@ case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProv
     }
   }
 
-  /** Reads the Dublin Core meta data */
   override def getDc(pid: String): String = datastreamToString(pid, "DC")
 
-  /** Reads Relationships-External */
   override def getRelsExt(pid: String): String = datastreamToString(pid, "RELS-EXT")
 
-  /** Reads the administrative meta data */
   override def getAmd(pid: String): String = datastreamToString(pid, "AMD")
 
-  /** Reads the permission request sequence list */
   override def getPrsql(pid: String): String = datastreamToString(pid, "PRSQL")
 
-  /** Reads the easy meta data */
   override def getEmd(pid: String): String = datastreamToString(pid, "EMD")
 }
