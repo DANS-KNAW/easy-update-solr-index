@@ -1,4 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-java -Dlogback.configurationFile=$EASY_UPDATE_SOLR_INDEX_HOME/cfg/logback.xml \
-     -jar $EASY_UPDATE_SOLR_INDEX_HOME/bin/easy-update-solr-index.jar $@
+BINDIR=`dirname $0`
+HOMEDIR=`dirname $BINDIR`
+
+java -Dlogback.configurationFile=$HOMEDIR/cfg/logback.xml \
+     -Dapp.homedir=$HOMEDIR \
+     -jar $HOMEDIR/bin/easy-update-solr-index.jar $@

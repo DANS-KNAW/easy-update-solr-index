@@ -33,20 +33,16 @@ object EasyUpdateSolrIndex {
   private val log = LoggerFactory.getLogger(getClass)
 
   /** API for EasyIngestFlow, fails on any type of error */
-  def run(implicit settings: Settings): Try[Unit] = {
-    Try {
+  def run(implicit settings: Settings): Try[Unit] = Try {
       val dataset = settings.datasets.get.head
       settings.solr.update(createSolrDoc(dataset))
       log.info(s"Committed $dataset to SOLR index")
-    }
   }
 
   /** API for commandline, continues if some dataset has problems with some datastream */
   def main(args: Array[String]) = {
-
     implicit val settings = Settings(new Conf(args))
     log.info(s"$settings")
-
     if (settings.datasetQuery.isDefined)
       settings.datasetQuery.get.foreach(datasetsFromQuery(_))
     else if (settings.input.isDefined)
@@ -54,14 +50,13 @@ object EasyUpdateSolrIndex {
     else if (settings.datasets.isDefined)
       settings.datasets.get.foreach(execute)
     else
-      throw new IllegalArgumentException("no datasets specified to update")
+      throw new IllegalArgumentException("No datasets specified to update")
   }
 
   @tailrec
   def datasetsFromQuery(query: String, token: Option[String] = None)
                  (implicit settings: Settings): Unit = {
-
-    val objectsQuery = findObjects().maxResults(settings.batchSize).pid().query(query)
+    val objectsQuery = findObjects().maxResults(settings.batchSize).pid.query(query)
     val objectsResponse = token match {
       case None =>
         log.info(s"Start $query")
@@ -69,11 +64,8 @@ object EasyUpdateSolrIndex {
       case Some(t) =>
         objectsQuery.sessionToken(t).execute
     }
-
     objectsResponse.getPids.asScala.foreach(execute)
-
-    if (objectsResponse.hasNext)
-      datasetsFromQuery(query, Some(objectsResponse.getToken))
+    if (objectsResponse.hasNext) datasetsFromQuery(query, Some(objectsResponse.getToken))
     else log.info(s"Finished $query")
   }
 
@@ -86,18 +78,14 @@ object EasyUpdateSolrIndex {
         // exception not in log, to avoid tons of stack traces in case of input errors
         log.error(s"Fetching data for SOLR update of $dataset FAILED: ${e.getMessage}")
       case Success(solrDocString) => ()
-        if (settings.output)
-          println(solrDocString)
-        if (log.isDebugEnabled)
-          log.debug(s"Contents of SOLR document for $dataset: $solrDocString")
+        if (settings.output) println(solrDocString)
+        if (log.isDebugEnabled) log.debug(s"Contents of SOLR document for $dataset: $solrDocString")
         log.info(s"Generated SOLR document for $dataset")
-        if (settings.testMode)
-          log.info(s"SOLR update skipped: $dataset")
-        else
-          settings.solr.update(solrDocString) match {
+        if (settings.testMode) log.info(s"SOLR update skipped: $dataset")
+        else settings.solr.update(solrDocString) match {
             case Success(_) => log.info(s"Committed $dataset to SOLR index")
             case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
-          }
+        }
     }
     sleep(settings.timeout)
   }
