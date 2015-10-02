@@ -9,13 +9,13 @@
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-update-solr-index</artifactId>
     <name>EASY Update SOLR Index</name>
-    <version>1.x-SNAPSHOT</version>
+    <version>1.0-beta-4</version>
     <properties>
         <main-class>nl.knaw.dans.easy.solr.EasyUpdateSolrIndex</main-class>
     </properties>
     <scm>
         <developerConnection>scm:git:https://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v1.0-beta-4</tag>
     </scm>
     <dependencies>
         <dependency>
