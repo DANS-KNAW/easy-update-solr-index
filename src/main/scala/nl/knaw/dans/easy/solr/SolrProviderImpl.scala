@@ -24,8 +24,8 @@ import scalaj.http.Http
 case class SolrProviderImpl(solrUrl: URL) extends SolrProvider {
   override def update(doc: String): Try[Unit] = Try {
     val result = Http(solrUrl.toString)
-      .header("Content-Type", "application/xml")
-      .param("commit", "true").postData(doc)
+      .header("Content-Type", "application/xml; charset=utf-8")
+      .param("commit", "true").postData(doc.getBytes("UTF-8"))
       .asString
     if(result.isError) throw new RuntimeException(s"${result.statusLine}, details: ${result.body}")
   }

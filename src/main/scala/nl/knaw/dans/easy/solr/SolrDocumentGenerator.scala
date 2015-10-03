@@ -17,10 +17,12 @@
 package nl.knaw.dans.easy.solr
 
 import org.joda.time.{DateTimeZone, DateTime}
+import org.slf4j.LoggerFactory
 
 import scala.xml._
 
 class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
+  val log = LoggerFactory.getLogger(getClass)
   val DC_NAMESPACE: String = "http://purl.org/dc/elements/1.1/"
   val EAS_NAMESPACE: String = "http://easy.dans.knaw.nl/easy/easymetadata/eas/"
   val RDF_NAMESPACE: String = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -40,13 +42,21 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
     .map(s => s"dc_${s}_s" -> (dc \\ s).map(_.text))
 
   val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
-    .map(s => s"emd_date_${s}" -> (emd \ "date" \ s).filter(_.namespace == EAS_NAMESPACE).map(n => toUtcTimestamp(n.text)))
+    .map(s => s"emd_date_${s}" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
+
+  def getEasDateElement(typeOfDate: String) = {
+    val elements = (emd \ "date" \ typeOfDate).filter(_.namespace == EAS_NAMESPACE)
+    if(elements.size > 1) {
+      log.warn(s"Found ${elements.size} date $typeOfDate elements but only one should be allowed. Metadata may be wrong! Using the first element found.")
+      NodeSeq.fromSeq(elements.head.toSeq)
+    } else elements
+  }
 
   def toUtcTimestamp(s: String): String =
     DateTime.parse(s).withZone(DateTimeZone.UTC).toString
 
   val emdFormattedDateMappings = List("created", "available")
-    .map(s => s"emd_date_${s}_formatted" -> (emd \ "date" \ s).filter(isFormattableDate).map(n => IsoDate.format(n.text, getPrecision(n))))
+    .map(s => s"emd_date_${s}_formatted" -> getEasDateElement(s).filter(isFormattableDate).map(n => IsoDate.format(n.text, getPrecision(n))))
 
   def isFormattableDate(n: Node): Boolean =
     (n.attribute(EAS_NAMESPACE, "format"), n.attribute(EAS_NAMESPACE, "scheme")) match {
