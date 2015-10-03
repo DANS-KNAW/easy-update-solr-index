@@ -22,16 +22,13 @@ import java.net.URL
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.ScallopConf
 
+import scala.util.{Failure, Success, Try}
+
 class Conf(args: Seq[String]) extends ScallopConf(args) {
 
   printedName = "easy-update-solr-index"
 
-  def getHomeDir: String = System.getProperty("app.homedir")
-
-  val propsFile = new File(
-    getHomeDir match { case null => "." case s => s},
-    "cfg/application.properties"
-  )
+  val propsFile = new File(System.getProperty("app.home"), "cfg/application.properties")
   val props = if (propsFile.exists) new PropertiesConfiguration(propsFile)
               else new PropertiesConfiguration()
 
@@ -60,6 +57,13 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
         "default.fcrepo-password",
         "")),
       descr = "Password for fcrepo-user")
+
+  val default = Try(new URL(props.getString(
+    "default.solr-update-url","http://localhost:8080/solr") )) match {
+    case Success(url: URL) => Some(url)
+    case Failure(e) => None
+  }
+
   val solr = opt[URL]("solr-update-url", default = Some(new URL(props.getString(
         "default.solr-update-url",
         "http://localhost:8080/solr"))),
@@ -71,11 +75,11 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
       default = Some(false),
       descr = "If provided: output SOLR document(s) to stdout")
   val batchSize = opt[Int]("dataset-batch-size",  short = 'b',default = Some(props.getInt(
-    "default.dataset.batch-size",
+    "default.dataset-batch-size",
     100)),
     descr = "Number of datasets to read at once from the dataset-query")
   val timeout = opt[Int]("dataset-timeout", short = 't', default = Some(props.getInt(
-    "default.dataset.timeout",
+    "default.dataset-timeout",
     1000)),
     descr = "Milliseconds to pause after processing a dataset " +
       "to avoid reducing performance of the production system too much")

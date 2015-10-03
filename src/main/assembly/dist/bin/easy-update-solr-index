@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-BINDIR=`dirname $0`
-HOMEDIR=`dirname $BINDIR`
+pushd `dirname $0`/.. > /dev/null
+APPHOME=`pwd -P`
+popd > /dev/null
 
-java -Dlogback.configurationFile=$HOMEDIR/cfg/logback.xml \
-     -Dapp.homedir=$HOMEDIR \
-     -jar $HOMEDIR/bin/easy-update-solr-index.jar $@
+java -Dlogback.configurationFile=$APPHOME/cfg/logback.xml \
+     -Dapp.home=$APPHOME \
+     -jar $APPHOME/bin/easy-update-solr-index.jar $@
