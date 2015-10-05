@@ -46,7 +46,7 @@ case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProv
       )
     }.get.getEntityInputStream
     try {
-      val s = IOUtils.toString(inputStream)
+      val s = IOUtils.toString(inputStream, "UTF-8")
       if (log.isDebugEnabled) log.debug(s"Retrieved pid=$pid, ds=$dsId:$s")
       s
     } finally {
