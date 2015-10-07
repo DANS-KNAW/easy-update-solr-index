@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.solr
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
+import org.slf4j.Logger
 import scala.xml._
 
 class SolrDocumentGeneratorSpec extends FlatSpec
@@ -29,6 +30,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
    * Mocking and helper functions.
    */
   val fedora = mock[FedoraProvider]
+  val log = mock[Logger]
 
   private def expectEmptyXmlByDefault = {
     expectDc(<dc/>)
@@ -43,6 +45,8 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   private def expectAmd(xml: Elem) = fedora.getAmd _ expects * anyNumberOfTimes() returning xml.toString
   private def expectPrsl(xml: Elem) = fedora.getPrsql _ expects * anyNumberOfTimes() returning xml.toString
   private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectWarningLogged() = (log.warn(_: String)) expects * atLeastOnce()
+
 
   private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] =
     (docRoot \\ "doc" \ "field").filter(f => (f \ "@name").text == field).map(_.text)
@@ -55,7 +59,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
 
     docRoot.label should be("add")
-    val fields = (docRoot \ "doc" \ "field").map(f => ((f \ "@name").text -> f.text))
+    val fields = (docRoot \ "doc" \ "field").map(f => (f \ "@name").text -> f.text)
     fields should have length(5)
     fields should contain("sid" -> "test-pid:123")
     fields should contain("type" -> "easy-dataset")
@@ -71,7 +75,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
       </dc>)
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val fields = (docRoot \ "doc" \ "field").map(f => ((f \ "@name").text -> f.text))
+    val fields = (docRoot \ "doc" \ "field").map(f => (f \ "@name").text -> f.text)
 
     fields should contain("sid" -> "test-pid:123")
     fields should contain("dc_title" -> "Some title")
@@ -340,6 +344,19 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     collections should contain(STRIPPED_COLLECTION)
   }
 
+  "two created dates" should "result in warning logged" in {
+    expectEmd(
+      <easymetadata
+        xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:date>
+          <eas:created eas:scheme="W3CDTF" eas:format="YEAR">2013-01-01T00:00:00.000+01:00</eas:created>
+          <eas:created eas:scheme="W3CDTF" eas:format="YEAR">2013-01-02T00:00:00.000+01:00</eas:created>
+        </emd:date>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    expectWarningLogged()
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123", log).toXml
+  }
 
 }
 
