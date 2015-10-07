@@ -17,12 +17,11 @@
 package nl.knaw.dans.easy.solr
 
 import org.joda.time.{DateTimeZone, DateTime}
-import org.slf4j.LoggerFactory
+import org.slf4j.{LoggerFactory, Logger}
 
 import scala.xml._
 
-class SolrDocumentGenerator(fedora: FedoraProvider, pid: String) {
-  val log = LoggerFactory.getLogger(getClass)
+class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = LoggerFactory.getLogger(getClass)) {
   val DC_NAMESPACE: String = "http://purl.org/dc/elements/1.1/"
   val EAS_NAMESPACE: String = "http://easy.dans.knaw.nl/easy/easymetadata/eas/"
   val RDF_NAMESPACE: String = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
