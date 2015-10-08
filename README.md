@@ -57,7 +57,7 @@ INSTALLATION AND CONFIGURATION
 
 1. Unzip the tarball to a directory of your choice, e.g. /opt/
 2. A new directory called easy-update-solr-index-<version> will be created
-3. The directory from step 2 is used as value for the system variabele ``app.home``
+3. The directory from step 2 is used as value for the system property ``app.home``
 4. Add ``${app.home}/bin`` to your ``PATH`` environment variable
 
 
