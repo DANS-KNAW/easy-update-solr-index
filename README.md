@@ -49,6 +49,7 @@ ARGUMENTS
           --version                     Show version of this program
 
 
+
 INSTALLATION AND CONFIGURATION
 ------------------------------
 
@@ -56,15 +57,16 @@ INSTALLATION AND CONFIGURATION
 
 1. Unzip the tarball to a directory of your choice, e.g. /opt/
 2. A new directory called easy-update-solr-index-<version> will be created
-3. Create an environment variabele ``EASY_UPDATE_SOLR_INDEX_HOME`` with the directory from step 2 as its value
-4. Add ``$EASY_UPDATE_SOLR_INDEX_HOME/bin`` to your ``PATH`` environment variable.
+3. The directory from step 2 is used as value for the system property ``app.home``
+4. Add ``${app.home}/bin`` to your ``PATH`` environment variable
 
 
 ### Configuration
 
-General configuration settings can be set in ``$EASY_UPDATE_SOLR_INDEX_HOME/cfg/application.properties`` and 
-logging can be configured in ``$EASY_UPDATE_SOLR_INDEX_HOME/cfg/logback.xml``. The available settings are explained in
-comments in aforementioned files.
+Set defaults for the command line arguments in ``${app.home}/cfg/application.properties``.
+Omitted items fall bach to the documented defaults.
+
+Configure logging in ``${app.home}/cfg/logback.xml`` which is self explaining.
 
 
 BUILDING FROM SOURCE
