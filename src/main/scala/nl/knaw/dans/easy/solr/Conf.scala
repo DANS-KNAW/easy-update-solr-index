@@ -22,7 +22,7 @@ import java.net.URL
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.ScallopConf
 
-class Conf(args: Seq[String]) extends ScallopConf(args) {
+class Conf(args: Seq[String] = Array[String]()) extends ScallopConf(args) {
 
   printedName = "easy-update-solr-index"
 
