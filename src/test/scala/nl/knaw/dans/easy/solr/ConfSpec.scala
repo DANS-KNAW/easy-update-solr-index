@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers, OneInstancePerTest}
 
 import scala.collection.JavaConverters._
 
-class ConfSpec extends FlatSpec with Matchers with OneInstancePerTest {
+class ConfSpec extends FlatSpec with Matchers {
 
   clearProperty("app.home")
   def helpInfo = {
@@ -26,20 +26,17 @@ class ConfSpec extends FlatSpec with Matchers with OneInstancePerTest {
     new File("README.md") should containTrimmed(options)
   }
 
-  "options with a configurable default" should "be in distributed application.properties" in {
-    val propKeys = new PropertiesConfiguration("src/main/assembly/dist/cfg/application.properties").getKeys.asScala.toList
-    new Conf().builder.opts
-      .filter(_.default().isDefined)
-      .filter(_.converter.argType.toString != "FLAG")
-      .foreach(opt => propKeys should contain (s"default.${opt.name}"))
-  }
-
   "synopsis in help info" should "be part of README.md" in {
-    val synopsis = helpInfo.split("Options:")(0).split("Defaults provided by:")(1)
+    val synopsis = helpInfo.split("Options:")(0).split("Usage:")(1)
     new File("README.md") should containTrimmed(synopsis)
   }
 
-  "default properties" should "be valid options" in {
+  "first banner line" should "be part of README.md" in {
+    val synopsis = helpInfo.split("\n")(1)
+    new File("README.md") should containTrimmed(synopsis)
+  }
+
+  "distributed default properties" should "be valid options" in {
     val optKeys = new Conf().builder.opts.map(opt => opt.name).toArray
     val propKeys = new PropertiesConfiguration("src/main/assembly/dist/cfg/application.properties")
       .getKeys.asScala.withFilter(key => key.startsWith("default.") )

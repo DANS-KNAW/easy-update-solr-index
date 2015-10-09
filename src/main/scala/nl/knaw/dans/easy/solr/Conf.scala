@@ -22,13 +22,19 @@ import java.net.URL
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.ScallopConf
 
-class Conf(args: Seq[String] = Array[String]()) extends ScallopConf(args) {
+import scala.collection.JavaConverters._
+
+/**
+ * Creates a set of parsed and validated command line arguments.
+ *
+ * @param args The default is a minimal list that does not exit due to invalid arguments.
+ *             Though --version or --help would validate, Scallop will call System.exit(0).
+ *             Otherwise the default option values make no sense.
+ */
+class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -qq -b1 -t0".split(" ")
+            ) extends ScallopConf(args) {
 
   printedName = "easy-update-solr-index"
-
-  val propsFile = new File(System.getProperty("app.home"), "cfg/application.properties")
-  val props = if (propsFile.exists) new PropertiesConfiguration(propsFile)
-              else new PropertiesConfiguration()
 
   version(s"$printedName ${Version()}")
   banner(s"""
@@ -39,49 +45,35 @@ class Conf(args: Seq[String] = Array[String]()) extends ScallopConf(args) {
             |    $printedName [<option>...] -d <dataset-id>...
             |    $printedName [<option>...] --file <text-file-with-dataset-id-per-line>
             |
-            | Defaults provided by: ${if (propsFile.exists()) propsFile.getCanonicalPath else "-"}
-            |
             | Options:
             |""".stripMargin)
-  val fedora = opt[URL]("fcrepo-server", default = Some(new URL(props.getString(
-        "default.fcrepo-server",
-        "http://localhost:8080/fedora"))),
-      descr = "URL of Fedora Commons Repository Server to connect to ")
-  val user = opt[String]("fcrepo-user", short = 'u', default = Some(props.getString(
-        "default.fcrepo-user",
-        "")),
-      descr = "User to connect to fcrepo-server")
-  val password = opt[String]("fcrepo-password", short = 'p', default = Some(props.getString(
-        "default.fcrepo-password",
-        "")),
-      descr = "Password for fcrepo-user")
-  val solr = opt[URL]("solr-update-url", default = Some(new URL(props.getString(
-        "default.solr-update-url",
-        "http://localhost:8080/solr"))),
-      descr="URL to POST SOLR documents to")
-  val debug = opt[Boolean]("debug", short = 'd',
-      default = Some(false),
-      descr = "If specified: only generate document(s), do not send anything to SOLR")
-  val output = opt[Boolean]("output",  short = 'o',
-      default = Some(false),
-      descr = "If provided: output SOLR document(s) to stdout")
-  val batchSize = opt[Int]("dataset-batch-size",  short = 'b',default = Some(props.getInt(
-    "default.dataset-batch-size",
-    100)),
+
+  val fedora = opt[URL]("fcrepo-server", required = true, short= 'f',
+    descr = "URL of Fedora Commons Repository Server to connect to ")
+  val user = opt[String]("fcrepo-user", required = true, short = 'u',
+    descr = "User to connect to fcrepo-server")
+  val password = opt[String]("fcrepo-password", required = true, short = 'p',
+    descr = "Password for fcrepo-user")
+  val solr = opt[URL]("solr-update-url", required = true, short ='s',
+    descr="URL to POST SOLR documents to")
+  val debug = opt[Boolean]("debug", default = Some(false), short = 'd',
+    descr = "If specified: only generate document(s), do not send anything to SOLR")
+  val output = opt[Boolean]("output", default = Some(false), short = 'o',
+    descr = "If provided: output SOLR document(s) to stdout")
+  val batchSize = opt[Int]("dataset-batch-size", required = true, short = 'b',
     descr = "Number of datasets to read at once from the dataset-query")
-  val timeout = opt[Int]("dataset-timeout", short = 't', default = Some(props.getInt(
-    "default.dataset-timeout",
-    1000)),
+  val timeout = opt[Int]("dataset-timeout", required = true, short = 't',
     descr = "Milliseconds to pause after processing a dataset " +
       "to avoid reducing performance of the production system too much")
+
   val datasetQuery = opt[List[String]]("fcrepo-query", short = 'q',
     descr = "Fedora query that selects datasets, " +
       "query example: 'pid~easy-dataset:*'. " +
       "see also help for 'specific fields' on <fcrepo-server>/objects")
   val datasets = opt[List[String]]("dataset-id", short = 'i',
-      descr = "ID of dataset to update, for eaxample: easy-dataset:1")
+    descr = "ID of dataset to update, for eaxample: easy-dataset:1")
   val input = opt[File]("file",
     descr = "Text file with a dataset-id per line")
-  mutuallyExclusive(datasetQuery, datasets, input)
-  dependsOnAll(batchSize,List(datasetQuery))
+
+  requireOne(datasetQuery, datasets, input)
 }

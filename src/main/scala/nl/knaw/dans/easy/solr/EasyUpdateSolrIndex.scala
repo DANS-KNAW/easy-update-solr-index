@@ -16,10 +16,11 @@
 
 package nl.knaw.dans.easy.solr
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream}
 import java.lang.Thread._
 
 import com.yourmediashelf.fedora.client.FedoraClient._
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.IOUtils.readLines
 import org.slf4j.LoggerFactory
 
@@ -41,7 +42,10 @@ object EasyUpdateSolrIndex {
 
   /** API for commandline, continues if some dataset has problems with some datastream */
   def main(args: Array[String]) = {
-    implicit val settings = Settings(new Conf(args))
+
+    val propsFile = new File(System.getProperty("app.home",""), "cfg/application.properties")
+    val completedArgs = getDefaults(args, propsFile) ++ args
+    implicit val settings = Settings(new Conf(completedArgs))
     log.info(s"$settings")
     if (settings.datasetQuery.isDefined)
       settings.datasetQuery.get.foreach(datasetsFromQuery(_))
@@ -51,6 +55,17 @@ object EasyUpdateSolrIndex {
       settings.datasets.get.foreach(execute)
     else
       throw new IllegalArgumentException("No datasets specified to update")
+  }
+
+  def getDefaults(args: Array[String], propsFile: File): Seq[String] = {
+    if (!propsFile.exists) {
+      log.info(s"system property 'app.home' not set and/or could not find ${propsFile.getAbsolutePath}")
+      Array[String]()
+    }
+    else {
+      log.info(s"defaults from ${propsFile.getAbsolutePath}")
+      Defaults.filter(args, new PropertiesConfiguration(propsFile))
+    }
   }
 
   @tailrec
