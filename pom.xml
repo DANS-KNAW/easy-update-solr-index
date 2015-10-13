@@ -9,6 +9,7 @@
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-update-solr-index</artifactId>
     <name>EASY Update SOLR Index</name>
+    <description>Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.</description>
     <version>1.x-SNAPSHOT</version>
     <properties>
         <main-class>nl.knaw.dans.easy.solr.EasyUpdateSolrIndex</main-class>

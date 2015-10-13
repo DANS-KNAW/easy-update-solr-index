@@ -31,9 +31,10 @@ class ConfSpec extends FlatSpec with Matchers {
     new File("README.md") should containTrimmed(synopsis)
   }
 
-  "first banner line" should "be part of README.md" in {
-    val synopsis = helpInfo.split("\n")(1)
-    new File("README.md") should containTrimmed(synopsis)
+  "first banner line" should "be part of README.md and pom.xml" in {
+    val description = helpInfo.split("\n")(1)
+    new File("README.md") should containTrimmed(description)
+    new File("pom.xml") should containTrimmed(description)
   }
 
   "distributed default properties" should "be valid options" in {
