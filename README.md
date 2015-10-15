@@ -24,27 +24,25 @@ ARGUMENTS
 ---------
 
       -b, --dataset-batch-size  <arg>   Number of datasets to read at once from the
-                                        dataset-query (default = 100)
+                                        dataset-query
       -i, --dataset-id  <arg>...        ID of dataset to update, for eaxample:
                                         easy-dataset:1
       -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a
                                         dataset to avoid reducing performance of the
-                                        production system too much (default = 1000)
+                                        production system too much
       -d, --debug                       If specified: only generate document(s), do
                                         not send anything to SOLR
-      -p, --fcrepo-password  <arg>      Password for fcrepo-user (default = )
+      -p, --fcrepo-password  <arg>      Password for fcrepo-user
       -q, --fcrepo-query  <arg>...      Fedora query that selects datasets, query
                                         example: 'pid~easy-dataset:*'. see also help
                                         for 'specific fields' on
                                         <fcrepo-server>/objects
       -f, --fcrepo-server  <arg>        URL of Fedora Commons Repository Server to
                                         connect to
-                                        (default = http://localhost:8080/fedora)
-      -u, --fcrepo-user  <arg>          User to connect to fcrepo-server (default = )
+      -u, --fcrepo-user  <arg>          User to connect to fcrepo-server
           --file  <arg>                 Text file with a dataset-id per line
       -o, --output                      If provided: output SOLR document(s) to stdout
       -s, --solr-update-url  <arg>      URL to POST SOLR documents to
-                                        (default = http://localhost:8080/solr)
           --help                        Show help message
           --version                     Show version of this program
 
