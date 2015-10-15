@@ -13,8 +13,8 @@ trait CustomMatchers {
       def trimLines(s: String): String = s.split("\n").map(_.trim).mkString("\n")
       MatchResult(
         trimLines(readFileToString(left)).contains(trimLines(content)),
-        s"""$left did not contain: $content """,
-        s"""$left contains $content"""
+        s"$left did not contain: $content" ,
+        s"$left contains $content"
       )
     }
   }

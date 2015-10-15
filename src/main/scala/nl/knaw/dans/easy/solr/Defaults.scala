@@ -1,24 +1,26 @@
 package nl.knaw.dans.easy.solr
 
 import org.apache.commons.configuration.PropertiesConfiguration
+import org.rogach.scallop.ScallopConf
 import scala.collection.JavaConverters._
 
 object Defaults {
 
-  /** maps long option names to the explicitly defined short keys */
-  val keyMap = new Conf().builder.opts
-    .withFilter(opt => opt.requiredShortNames.nonEmpty)
-    .map(opt => (opt.name, opt.requiredShortNames.head)).toMap
-
   /**
-   * Gets defaults from properties for options that are not on the command line.
+   * Gets defaults from props for conf.options that are not in args.
    *
-   * @param args command line arguments
    * @param props key-value pairs: if a key is prefixed with "default."
    *              the rest of the key should equal one of the option names
-   * @return key-value pairs from props for keys not in args
+   * @param conf a validating instance
+   * @param args command line arguments
+   * @return key-value pairs from props for conf.options not in args
    */
-  def filter(args: Seq[String], props: PropertiesConfiguration): Seq[String] = {
+  def filterDefaultOptions(props: PropertiesConfiguration, conf: ScallopConf, args: Seq[String]): Seq[String] = {
+
+    /** maps long option names to the explicitly defined short keys */
+    val keyMap = conf.builder.opts
+      .withFilter(opt => opt.requiredShortNames.nonEmpty)
+      .map(opt => (opt.name, opt.requiredShortNames.head)).toMap
 
     val longArgs = args.filter(arg => arg.matches("--.*")).map(arg => arg.replaceFirst("--",""))
     val shortArgs = args.filter(arg => arg.matches("-[^-].*")).map(arg => arg.charAt(1))

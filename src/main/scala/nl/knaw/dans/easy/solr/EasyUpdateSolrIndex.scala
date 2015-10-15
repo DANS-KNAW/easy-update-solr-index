@@ -20,6 +20,7 @@ import java.io.{File, FileInputStream}
 import java.lang.Thread._
 
 import com.yourmediashelf.fedora.client.FedoraClient._
+import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.IOUtils.readLines
 import org.slf4j.LoggerFactory
@@ -64,7 +65,7 @@ object EasyUpdateSolrIndex {
     }
     else {
       log.info(s"defaults from ${propsFile.getAbsolutePath}")
-      Defaults.filter(args, new PropertiesConfiguration(propsFile))
+      filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(), args)
     }
   }
 
