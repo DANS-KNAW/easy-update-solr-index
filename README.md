@@ -24,9 +24,10 @@ dataset(s)
 ARGUMENTS
 ---------
 
-      -b, --dataset-batch-size  <arg>   Number of datasets to read at once from the
-                                        dataset-query
-      -i, --dataset-id  <arg>...        ID of dataset to update, for eaxample:
+      -b, --dataset-batch-size  <arg>   Number of datasets to update at once,
+                                        maximized by fedora to 100 when selecting
+                                        datasets with a query
+      -i, --dataset-id  <arg>...        ID of dataset to update, for example:
                                         easy-dataset:1
       -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a
                                         dataset to avoid reducing performance of the

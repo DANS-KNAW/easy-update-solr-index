@@ -60,7 +60,7 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -qq -b1 -t0".split(" ")
   val output = opt[Boolean]("output", default = Some(false), short = 'o',
     descr = "If provided: output SOLR document(s) to stdout")
   val batchSize = opt[Int]("dataset-batch-size", required = true, short = 'b',
-    descr = "Number of datasets to read at once from the dataset-query")
+    descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting datasets with a query")
   val timeout = opt[Int]("dataset-timeout", required = true, short = 't',
     descr = "Milliseconds to pause after processing a dataset " +
       "to avoid reducing performance of the production system too much")
@@ -70,7 +70,7 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -qq -b1 -t0".split(" ")
       "query example: 'pid~easy-dataset:*'. " +
       "see also help for 'specific fields' on <fcrepo-server>/objects")
   val datasets = opt[List[String]]("dataset-id", short = 'i',
-    descr = "ID of dataset to update, for eaxample: easy-dataset:1")
+    descr = "ID of dataset to update, for example: easy-dataset:1")
   val input = opt[File]("file",
     descr = "Text file with a dataset-id per line")
 
