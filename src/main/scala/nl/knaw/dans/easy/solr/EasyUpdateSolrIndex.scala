@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-import scala.xml.PrettyPrinter
+import scala.xml.{Elem, PrettyPrinter}
 
 object EasyUpdateSolrIndex {
 
@@ -50,9 +50,9 @@ object EasyUpdateSolrIndex {
     if (settings.datasetQuery.isDefined)
       settings.datasetQuery.get.foreach(datasetsFromQuery(_))
     else if (settings.input.isDefined)
-      readLines(new FileInputStream(settings.input.get)).asScala.foreach(execute)
+      readLines(new FileInputStream(settings.input.get)).asScala.foreach(id => execute(Seq(id)))
     else if (settings.datasets.isDefined)
-      settings.datasets.get.foreach(execute)
+      settings.datasets.get.foreach(id => execute(Seq(id)))
     else
       throw new IllegalArgumentException("No datasets specified to update")
   }
@@ -79,36 +79,36 @@ object EasyUpdateSolrIndex {
       case Some(t) =>
         objectsQuery.sessionToken(t).execute
     }
-    objectsResponse.getPids.asScala.foreach(execute)
+    execute (objectsResponse.getPids.asScala.toSeq) // TODO same batch size for retrieval and update?
     if (objectsResponse.hasNext) datasetsFromQuery(query, Some(objectsResponse.getToken))
     else log.info(s"Finished $query")
   }
 
-  def execute(dataset: String)
+  def execute(datasets: Seq[String])
              (implicit settings: Settings): Unit = {
-    Try {
-      createSolrDoc(dataset)
-    } match {
-      case Failure(e) =>
-        // exception not in log, to avoid tons of stack traces in case of input errors
-        log.error(s"Fetching data for SOLR update of $dataset FAILED: ${e.getMessage}")
-      case Success(solrDocString) => ()
-        if (settings.output) println(solrDocString)
-        if (log.isDebugEnabled) log.debug(s"Contents of SOLR document for $dataset: $solrDocString")
-        log.info(s"Generated SOLR document for $dataset")
-        if (settings.testMode) log.info(s"SOLR update skipped: $dataset")
-        else settings.solr.update(solrDocString) match {
-            case Success(_) => log.info(s"Committed $dataset to SOLR index")
-            case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
-        }
+    val docs = datasets.map(createSolrDoc).filter(_.nonEmpty)
+    val s = docs.mkString("").replaceAll("</add><add>","") // TODO just generate <doc>...</doc>
+    if (docs.nonEmpty) settings.solr.update(s) match {
+      case Success(_) => log.info(s"Committed ${docs.size} documents for ${datasets.size} datasets to SOLR index")
+      case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
     }
-    sleep(settings.timeout)
   }
 
   private def createSolrDoc(dataset: String)
-                           (implicit settings: Settings): String = {
-    new PrettyPrinter(160, 2).format(
-      new SolrDocumentGenerator(settings.fedora, dataset).toXml
-    )
-  }
+                           (implicit settings: Settings): String =
+    Try {
+      val solrDocString = new PrettyPrinter(160, 2).format(
+        new SolrDocumentGenerator(settings.fedora, dataset).toXml
+      )
+      if (settings.output) println(solrDocString)
+      log.info(s"Generated SOLR document for $dataset")
+      if (log.isDebugEnabled) log.debug(s"Contents of SOLR document for $dataset: $solrDocString")
+      solrDocString
+    } match {
+      case Success(s) => s
+      case Failure(e) =>
+        // exception not in log, to avoid tons of stack traces in case of input errors
+        log.error(s"Fetching data for SOLR update of $dataset FAILED: ${e.getMessage}")
+        ""
+    }
 }
