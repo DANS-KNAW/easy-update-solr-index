@@ -1,5 +1,6 @@
 easy-update-solr-index
 ======================
+[![Build Status](https://travis-ci.org/DANS-KNAW/easy-update-solr-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-update-solr-index)
 
 Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.
 
