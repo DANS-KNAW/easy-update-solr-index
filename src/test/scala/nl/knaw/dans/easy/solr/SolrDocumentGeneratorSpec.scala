@@ -57,9 +57,9 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
 
-    docRoot.label should be("add")
-    val fields = (docRoot \ "doc" \ "field").map(f => (f \ "@name").text -> f.text)
-    fields should have length(5)
+    docRoot.label should be("doc")
+    val fields = (docRoot \ "field").map(f => (f \ "@name").text -> f.text)
+    fields should have length 5
     fields should contain("sid" -> "test-pid:123")
     fields should contain("type" -> "easy-dataset")
     fields should contain("type" -> "dataset")
@@ -74,7 +74,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
       </dc>)
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val fields = (docRoot \ "doc" \ "field").map(f => (f \ "@name").text -> f.text)
+    val fields = (docRoot \ "field").map(f => (f \ "@name").text -> f.text)
 
     fields should contain("sid" -> "test-pid:123")
     fields should contain("dc_title" -> "Some title")
@@ -92,7 +92,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val sortTitle = getSolrDocFieldValues(docRoot, "dc_title_s")
 
-    sortTitle should have length(1)
+    sortTitle should have length 1
     sortTitle should contain("Title 1 Title 2")
   }
 
@@ -107,7 +107,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
       </easymetadata>)
       expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val archSubjects= (docRoot \ "doc" \\ "field").filter(f => (f \ "@name").text == "archaeology_dc_subject").map(_.text)
+    val archSubjects= (docRoot \\ "field").filter(f => (f \ "@name").text == "archaeology_dc_subject").map(_.text)
 
     archSubjects should contain("ELCF")
     archSubjects shouldNot contain("some other subject")
@@ -198,8 +198,8 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val daiCreators = getSolrDocFieldValues(docRoot, "dai_creator")
     val daiContributors = getSolrDocFieldValues(docRoot, "dai_contributor")
 
-    daiCreators should have length(2)
-    daiContributors should have length(2)
+    daiCreators should have length 2
+    daiContributors should have length 2
     daiCreators should contain(CREATOR1_DAI)
     daiCreators should contain(CREATOR2_DAI)
     daiContributors should contain(CONTRIBUTOR1_DAI)
@@ -236,7 +236,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val requestStatuses = getSolrDocFieldValues(docRoot, "psl_permission_status")
 
-    requestStatuses should have length(1)
+    requestStatuses should have length 1
     requestStatuses should contain(s"$REQUESTER_ID $STATE $LAST_MODIFIED")
   }
 
@@ -310,7 +310,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val requestStatuses = getSolrDocFieldValues(docRoot, "psl_permission_status")
 
-    requestStatuses should have length(3)
+    requestStatuses should have length 3
     requestStatuses should contain(s"$REQUESTER_ID3 $STATE3 $LAST_MODIFIED3")
     requestStatuses should contain(s"$REQUESTER_ID2 $STATE2 $LAST_MODIFIED2")
     requestStatuses should contain(s"$REQUESTER_ID1 $STATE1 $LAST_MODIFIED1")
@@ -339,7 +339,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val collections = getSolrDocFieldValues(docRoot, "easy_collections")
 
-    collections should have length(1)
+    collections should have length 1
     collections should contain(STRIPPED_COLLECTION)
   }
 
@@ -354,7 +354,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
       </easymetadata>)
     expectEmptyXmlByDefault
     expectWarningLogged()
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123", log).toXml
+    new SolrDocumentGenerator(fedora, "test-pid:123", log).toXml
   }
 
 }

@@ -114,7 +114,6 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     List((n \ "requesterId").text, (n \ "state").text, (n \ "stateLastModified").text).mkString(" ")
 
   def toXml: Elem =
-    <add>
       <doc>
         <!-- Some standard fields that need to be here, in this order. Don't ask ... -->
         <field name="type">easy-dataset</field>
@@ -129,7 +128,6 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
         {emdFormattedDateMappings.flatMap(f => createField(f._1, f._2))}
         {otherMappings.flatMap(f => createField(f._1, f._2))}
       </doc>
-    </add>
 
   def createField(name: String, values: Seq[String]): NodeSeq =
     values.map(value => <field name={name}>{value}</field>)
