@@ -30,7 +30,7 @@ import scala.collection.JavaConverters._
  *             Though --version or --help would validate, Scallop will call System.exit(0).
  *             Otherwise the default option values make no sense.
  */
-class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -qq -b1 -t0".split(" ")
+class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")
             ) extends ScallopConf(args) {
 
   printedName = "easy-update-solr-index"
@@ -60,19 +60,14 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -qq -b1 -t0".split(" ")
   val output = opt[Boolean]("output", default = Some(false), short = 'o',
     descr = "If provided: output SOLR document(s) to stdout")
   val batchSize = opt[Int]("dataset-batch-size", required = true, short = 'b',
-    descr = "Number of datasets to read at once from the dataset-query")
+    descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting datasets with a query")
   val timeout = opt[Int]("dataset-timeout", required = true, short = 't',
-    descr = "Milliseconds to pause after processing a dataset " +
+    descr = "Milliseconds to pause after processing a batch of datasets " +
       "to avoid reducing performance of the production system too much")
 
-  val datasetQuery = opt[List[String]]("fcrepo-query", short = 'q',
-    descr = "Fedora query that selects datasets, " +
-      "query example: 'pid~easy-dataset:*'. " +
-      "see also help for 'specific fields' on <fcrepo-server>/objects")
-  val datasets = opt[List[String]]("dataset-id", short = 'i',
-    descr = "ID of dataset to update, for eaxample: easy-dataset:1")
-  val input = opt[File]("file",
-    descr = "Text file with a dataset-id per line")
-
-  requireOne(datasetQuery, datasets, input)
+  val datasets = trailArg[List[String]]("dataset-ids",
+    descr = "One or more of: dataset id (for example 'easy-dataset:1'), " +
+      "a file with a dataset id per line or " +
+      "a fedora query that selects datasets (for example 'pid~easy-dataset:*', " +
+      "see also help for 'specific fields' on <fcrepo-server>/objects) ")
 }

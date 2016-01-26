@@ -42,7 +42,7 @@ class DefaultsSpec extends FlatSpec with Matchers {
 
   "minimal args plus defaults" should "parse" in {
 
-    val args = "-q pid~easy-dataset:*".split(" ")
+    val args = "pid~easy-dataset:*".split(" ")
     val completedArgs = filterDefaultOptions(props, new Conf(), args) ++ args
 
     new Conf(completedArgs).batchSize.apply() shouldBe 100
@@ -50,7 +50,7 @@ class DefaultsSpec extends FlatSpec with Matchers {
 
   "command line values" should "have precedence over default values" in {
 
-    val args = "-b3 -u u --dataset-timeout 6 -i easy-dataset:1".split(" ")
+    val args = "-b3 -u u --dataset-timeout 6 easy-dataset:1".split(" ")
     val completedArgs = filterDefaultOptions(props, new Conf(), args) ++ args
 
     val conf = new Conf(completedArgs)
