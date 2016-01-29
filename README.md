@@ -7,9 +7,7 @@ Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commo
 SYNOPSIS
 --------
 
-    easy-update-solr-index [<option>...] -q <fcrepo-query>...
-    easy-update-solr-index [<option>...] -i <dataset-id>...
-    easy-update-solr-index [<option>...] --file <text-file-with-dataset-id-per-line>
+    easy-update-solr-index [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ...
 
 
 DESCRIPTION

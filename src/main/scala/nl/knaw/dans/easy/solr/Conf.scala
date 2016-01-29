@@ -40,9 +40,7 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")
             | Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.
             |
             | Usage:
-            |    $printedName [<option>...] -q <fcrepo-query>...
-            |    $printedName [<option>...] -i <dataset-id>...
-            |    $printedName [<option>...] --file <text-file-with-dataset-id-per-line>
+            |    $printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ...
             |
             | Options:
             |""".stripMargin)
