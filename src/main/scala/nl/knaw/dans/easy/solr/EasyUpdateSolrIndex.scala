@@ -35,7 +35,7 @@ object EasyUpdateSolrIndex {
 
   /** API for EasyIngestFlow, assumes a single dataset id, fails on any type of error */
   def run(implicit settings: Settings): Try[Unit] = Try {
-      settings.solr.update(createSolrDoc(settings.datasets.head))
+      settings.solr.update("<add>"+createSolrDoc(settings.datasets.head)+"</add>")
       log.info(s"Committed ${settings.datasets.head} to SOLR index")
   }
 
