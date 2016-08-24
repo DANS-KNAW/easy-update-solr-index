@@ -25,19 +25,120 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   val EAS_NAMESPACE: String = "http://easy.dans.knaw.nl/easy/easymetadata/eas/"
   val RDF_NAMESPACE: String = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
-  val dc = XML.loadString(fedora.getDc(pid))
+  //val dc = XML.loadString(fedora.getDc(pid))
   val emd = XML.loadString(fedora.getEmd(pid))
   val amd = XML.loadString(fedora.getAmd(pid))
   val prsl = XML.loadString(fedora.getPrsql(pid))
   val relsExt = XML.loadString(fedora.getRelsExt(pid))
 
-  val dcMappings = List("title", "description", "creator", "subject", "publisher",
-    "contributor", "date", "type", "format", "identifier", "source", "language", "relation",
-    "coverage", "rights")
-    .map(s => s"dc_$s" -> (dc \ s).map(_.text))
+  /** dc */
 
-  val dcMappingsSort = List("title", "creator", "publisher", "contributor")
-    .map(s => s"dc_${s}_s" -> (dc \\ s).map(_.text))
+  /** with sort fields */
+  val dcTitleFromEmdMappings = List("title")
+    .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
+  val dcTitleSort = List("title").map(s => s"dc_${s}_s" -> Seq(dcTitleFromEmdMappings.head._2.mkString(" ")))
+
+  val dcPublisherFromEmdMappings = List("publisher")
+    .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
+  val dcPublisherSort = List("publisher").map(s => s"dc_${s}_s" -> Seq(dcPublisherFromEmdMappings.head._2.mkString(" ")))
+
+  def extractPersonForDc(p: Node) = {
+    // formatting the persons name
+    val nameStart = (p \ "surname").text
+    val nameEnd = List("title", "initials", "prefix").map(s => (p \ s).text).filter(_.nonEmpty).mkString(" ")
+    val name = List(nameStart, nameEnd).filter(_.nonEmpty).mkString(", ")
+    val org = (p \ "organization").text
+
+    if (org.isEmpty) name
+    else if (name.nonEmpty) s"$name ($org)"
+    else org
+  }
+
+  val dcCreatorFromEmdMappings = List("creator").map(s => s"dc_$s" -> (emd \ s \ "_")
+    .map(n => {
+      if ( n.namespace == EAS_NAMESPACE) extractPersonForDc(n)
+      else n.text
+    })
+  )
+  val dcCreatorSort = List("creator").map(s => s"dc_${s}_s" -> Seq(dcCreatorFromEmdMappings.head._2.mkString(" ")))
+
+  val dcContributorFromEmdMappings = List("contributor").map(s => s"dc_$s" -> (emd \ s \ "_")
+    .map(n => {
+      if ( n.namespace == EAS_NAMESPACE) extractPersonForDc(n)
+      else n.text
+    })
+  )
+  val dcContributorSort = List("contributor").map(s => s"dc_${s}_s" -> Seq(dcContributorFromEmdMappings.head._2.mkString(" ")))
+
+  /** without sort fields */
+
+  val dcOtherFromEmdMappings = List("description","subject","type","format","identifier","source","language","rights")
+    .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
+
+  val dcDateFromEmdMappings = List("date").map(s => s"dc_$s" -> (emd \ s \ "_")
+    .map(n => {
+      if (isFormattableDate(n)) IsoDate.format(n.text, getPrecision(n))
+      else n.text
+    }))
+
+  def extractRelationForDc(relation: Node) = {
+    (( relation \\ "subject-title").text, (relation \\ "subject-link").text) match {
+      case (title, "") => s"title=$title"
+      case (title, uri) => s"title=$title URI=$uri"
+    }
+  }
+
+  val dcRelationFromEmdMappings = List("relation")
+    .map(s => s"dc_$s" -> (emd \ s \ "_").map(r => extractRelationForDc(r)))
+
+  def extractPointForDc(point: Node) = {
+    s"scheme=${point.attribute(EAS_NAMESPACE, "scheme").get} x=${(point \ "x").text} y=${(point \ "y").text}"
+  }
+
+  def extractBoxForDc(box: Node) = {
+    val coordinates = List("north", "east", "south", "west").map(cn => s"$cn=${(box \ cn).text}").mkString(" ")
+    s"scheme=${box.attribute(EAS_NAMESPACE, "scheme").get} $coordinates"
+  }
+
+  def extractSpatialForDc(spatial: Node) = {
+    (spatial \ "point", spatial \ "box") match {
+      case (Seq(), Seq()) => spatial.text
+      case (pointSeq, Seq()) => extractPointForDc(pointSeq.head)
+      case (Seq(), boxSeq) => extractBoxForDc(boxSeq.head)
+    }
+  }
+
+  val dcCoverageFromEmdMappings = List("coverage")
+    .map(s => s"dc_$s" -> (emd \ s \ "_").map( n => n.label match {
+      case "spatial" => extractSpatialForDc(n)
+      case _ => n.text
+    }))
+
+  /** combine */
+
+  //  val dcFromEmdMappings = List("title")
+  //    .map(s => s"dc_$s" -> (emd \ s).map(_.text))
+
+  //val dcMappings = List("title", "description", "creator", "subject", "publisher",
+  //  "contributor", "date", "type", "format", "identifier", "source", "language", "relation",
+  //  "coverage", "rights")
+  //  .map(s => s"dc_$s" -> (dc \ s).map(_.text))
+
+  val dcMappings = dcTitleFromEmdMappings ++
+    dcPublisherFromEmdMappings ++
+    dcCreatorFromEmdMappings ++
+    dcContributorFromEmdMappings ++
+    dcDateFromEmdMappings ++
+    dcRelationFromEmdMappings ++
+    dcCoverageFromEmdMappings ++
+    dcOtherFromEmdMappings
+
+  //val dcMappingsSort = List("title", "creator", "publisher", "contributor")
+  //  .map(s => s"dc_${s}_s" -> (dc \\ s).map(_.text))
+
+  val dcMappingsSort = dcCreatorSort ++ dcContributorSort ++ dcTitleSort ++ dcPublisherSort
+
+  /** emd */
 
   val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
     .map(s => s"emd_date_${s}" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
