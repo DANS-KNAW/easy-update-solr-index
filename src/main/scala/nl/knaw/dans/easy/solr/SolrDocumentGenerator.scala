@@ -81,15 +81,20 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
       else n.text
     }))
 
+
   def extractRelationForDc(relation: Node) = {
     (( relation \\ "subject-title").text, (relation \\ "subject-link").text) match {
       case (title, "") => s"title=$title"
+      case ("", uri) => s"URI=$uri"
       case (title, uri) => s"title=$title URI=$uri"
     }
   }
 
   val dcRelationFromEmdMappings = List("relation")
-    .map(s => s"dc_$s" -> (emd \ s \ "_").map(r => extractRelationForDc(r)))
+    .map(s => s"dc_$s" -> (emd \ s \ "_") .map(n => {
+      if ( n.namespace == EAS_NAMESPACE) extractRelationForDc(n)
+      else n.text
+    }))
 
   def extractPointForDc(point: Node) = {
     s"scheme=${point.attribute(EAS_NAMESPACE, "scheme").get} x=${(point \ "x").text} y=${(point \ "y").text}"

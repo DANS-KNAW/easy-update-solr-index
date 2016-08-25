@@ -67,7 +67,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     fields should contain("amd_workflow_progress" -> "0")
   }
 
-  "All dc_* fields" should "be extracted from EMD" in {
+  "all dc_* fields" should "be extracted from EMD" in {
     expectEmd(
       <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
       <emd:title>
@@ -107,9 +107,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         <dct:created>2016-01-01</dct:created>
       </emd:date>
         <emd:relation>
-          <eas:relation>
-            <eas:subject-title>relation</eas:subject-title>
-          </eas:relation>
+          <dc:relation>relation</dc:relation>
         </emd:relation>
         <emd:creator>
           <eas:creator>
@@ -138,7 +136,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     fields should contain("dc_rights" -> "OPEN_ACCESS")
     fields should contain("dc_coverage" -> "spatial")
     fields should contain("dc_date" -> "2016-01-01")
-    fields should contain("dc_relation" -> "title=relation")
+    fields should contain("dc_relation" -> "relation")
     fields should contain("dc_creator" -> "creator-org")
     fields should contain("dc_contributor" -> "contributor-org")
     fields should contain("dc_title_s" -> "title")
@@ -270,21 +268,23 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   "dc_relation" should "contain correctly handled title and uri" in {
     expectEmd(
       <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-    <eas:relation>
-      <eas:subject-title>no qualif</eas:subject-title>
-    </eas:relation>
-    <emd:relation>
-      <eas:references>
-        <eas:subject-title>reftitle</eas:subject-title>
-        <eas:subject-link>http://dans.knaw.nl</eas:subject-link>
-      </eas:references>
-    </emd:relation>
-  </easymetadata>)
+        <emd:relation>
+          <dc:relation>relation</dc:relation>
+          <eas:relation>
+            <eas:subject-title>no-qualif</eas:subject-title>
+          </eas:relation>
+          <eas:references>
+            <eas:subject-title>ref-title</eas:subject-title>
+            <eas:subject-link>http://dans.knaw.nl</eas:subject-link>
+          </eas:references>
+        </emd:relation>
+      </easymetadata>)
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val dcRelation = getSolrDocFieldValues(docRoot, "dc_relation")
-    dcRelation should contain("title=no qualif")
-    dcRelation should contain("title=reftitle URI=http://dans.knaw.nl")
+    dcRelation should contain("relation")
+    dcRelation should contain("title=no-qualif")
+    dcRelation should contain("title=ref-title URI=http://dans.knaw.nl")
   }
 
   "archaeology_dc_subject" should "only get values from subject fields with corresponding schemeId attribute" in {
