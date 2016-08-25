@@ -36,13 +36,13 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   /** with sort fields */
   val dcTitleFromEmdMappings = List("title")
     .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
-  val dcTitleSort = List("title").map(s => s"dc_${s}_s" -> Seq(dcTitleFromEmdMappings.head._2.mkString(" ")))
+  val dcTitleSort = List("title").map(s => s"dc_${s}_s" -> dcTitleFromEmdMappings.head._2)
 
   val dcPublisherFromEmdMappings = List("publisher")
     .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
-  val dcPublisherSort = List("publisher").map(s => s"dc_${s}_s" -> Seq(dcPublisherFromEmdMappings.head._2.mkString(" ")))
+  val dcPublisherSort = List("publisher").map(s => s"dc_${s}_s" -> dcPublisherFromEmdMappings.head._2)
 
-  def extractPersonForDc(p: Node) = {
+  def extractPersonOrganizationForDc(p: Node) = {
     // formatting the persons name
     val nameStart = (p \ "surname").text
     val nameEnd = List("title", "initials", "prefix").map(s => (p \ s).text).filter(_.nonEmpty).mkString(" ")
@@ -56,19 +56,19 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
 
   val dcCreatorFromEmdMappings = List("creator").map(s => s"dc_$s" -> (emd \ s \ "_")
     .map(n => {
-      if ( n.namespace == EAS_NAMESPACE) extractPersonForDc(n)
+      if ( n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
       else n.text
     })
   )
-  val dcCreatorSort = List("creator").map(s => s"dc_${s}_s" -> Seq(dcCreatorFromEmdMappings.head._2.mkString(" ")))
+  val dcCreatorSort = List("creator").map(s => s"dc_${s}_s" -> dcCreatorFromEmdMappings.head._2)
 
   val dcContributorFromEmdMappings = List("contributor").map(s => s"dc_$s" -> (emd \ s \ "_")
     .map(n => {
-      if ( n.namespace == EAS_NAMESPACE) extractPersonForDc(n)
+      if ( n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
       else n.text
     })
   )
-  val dcContributorSort = List("contributor").map(s => s"dc_${s}_s" -> Seq(dcContributorFromEmdMappings.head._2.mkString(" ")))
+  val dcContributorSort = List("contributor").map(s => s"dc_${s}_s" -> dcContributorFromEmdMappings.head._2)
 
   /** without sort fields */
 
