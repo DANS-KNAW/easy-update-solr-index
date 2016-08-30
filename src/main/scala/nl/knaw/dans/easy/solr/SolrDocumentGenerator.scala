@@ -1,18 +1,18 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *         http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package nl.knaw.dans.easy.solr
 
 import org.joda.time.{DateTimeZone, DateTime}
@@ -31,16 +31,15 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   val prsl = XML.loadString(fedora.getPrsql(pid))
   val relsExt = XML.loadString(fedora.getRelsExt(pid))
 
-  /** dc */
+  /* dc */
 
-  /** with sort fields */
-  val dcTitleFromEmdMappings = List("title")
-    .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
-  val dcTitleSort = List("title").map(s => s"dc_${s}_s" -> dcTitleFromEmdMappings.head._2)
+  /* with sort fields */
 
-  val dcPublisherFromEmdMappings = List("publisher")
-    .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
-  val dcPublisherSort = List("publisher").map(s => s"dc_${s}_s" -> dcPublisherFromEmdMappings.head._2)
+  val dcTitle = "title"
+  val dcTitleFromEmdMapping@(dcTitleKey, dcTitleValues) = s"dc_$dcTitle" -> (emd \ dcTitle \ "_").map(_.text)
+
+  val dcPublisher = "publisher"
+  val dcPublisherFromEmdMapping@(dcPublisherKey, dcPublisherValues) = s"dc_$dcPublisher" -> (emd \ dcPublisher \ "_").map(_.text)
 
   def extractPersonOrganizationForDc(p: Node) = {
     // formatting the persons name
@@ -54,47 +53,46 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     else org
   }
 
-  val dcCreatorFromEmdMappings = List("creator").map(s => s"dc_$s" -> (emd \ s \ "_")
+  val dcCreator = "creator"
+  val dcCreatorFromEmdMapping@(dcCreatorKey, dcCreatorValues) = s"dc_$dcCreator" -> (emd \ dcCreator \ "_")
     .map(n => {
-      if ( n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
+      if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
       else n.text
     })
-  )
-  val dcCreatorSort = List("creator").map(s => s"dc_${s}_s" -> dcCreatorFromEmdMappings.head._2)
 
-  val dcContributorFromEmdMappings = List("contributor").map(s => s"dc_$s" -> (emd \ s \ "_")
+  val dcContributor = "contributor"
+  val dcContributorFromEmdMapping@(dcContributorKey, dcContributorValues) = s"dc_$dcContributor" -> (emd \ dcContributor \ "_")
     .map(n => {
-      if ( n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
+      if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
       else n.text
     })
-  )
-  val dcContributorSort = List("contributor").map(s => s"dc_${s}_s" -> dcContributorFromEmdMappings.head._2)
 
-  /** without sort fields */
+  /* without sort fields */
 
   val dcOtherFromEmdMappings = List("description","subject","type","format","identifier","source","language","rights")
     .map(s => s"dc_$s" -> (emd \ s \ "_").map(_.text))
 
-  val dcDateFromEmdMappings = List("date").map(s => s"dc_$s" -> (emd \ s \ "_")
+  val dcDate = "date"
+  val dcDateFromEmdMapping = s"dc_$dcDate" -> (emd \ dcDate \ "_")
     .map(n => {
       if (isFormattableDate(n)) IsoDate.format(n.text, getPrecision(n))
       else n.text
-    }))
-
+    })
 
   def extractRelationForDc(relation: Node) = {
-    (( relation \\ "subject-title").text, (relation \\ "subject-link").text) match {
+    ((relation \\ "subject-title").text, (relation \\ "subject-link").text) match {
       case (title, "") => s"title=$title"
       case ("", uri) => s"URI=$uri"
       case (title, uri) => s"title=$title URI=$uri"
     }
   }
 
-  val dcRelationFromEmdMappings = List("relation")
-    .map(s => s"dc_$s" -> (emd \ s \ "_") .map(n => {
-      if ( n.namespace == EAS_NAMESPACE) extractRelationForDc(n)
+  val dcRelation = "relation"
+  val dcRelationFromEmdMapping = s"dc_$dcRelation" -> (emd \ dcRelation \ "_")
+    .map(n => {
+      if (n.namespace == EAS_NAMESPACE) extractRelationForDc(n)
       else n.text
-    }))
+    })
 
   def extractPointForDc(point: Node) = {
     s"scheme=${point.attribute(EAS_NAMESPACE, "scheme").get} x=${(point \ "x").text} y=${(point \ "y").text}"
@@ -113,37 +111,31 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
   }
 
-  val dcCoverageFromEmdMappings = List("coverage")
-    .map(s => s"dc_$s" -> (emd \ s \ "_").map( n => n.label match {
-      case "spatial" => extractSpatialForDc(n)
-      case _ => n.text
-    }))
+  val dcCoverage = "coverage"
+  val dcCoverageFromEmdMapping = s"dc_$dcCoverage" -> (emd \ dcCoverage \ "_")
+    .map(n => {
+      if (n.label == "spatial") extractSpatialForDc(n)
+      else n.text
+    })
 
-  /** combine */
+  /* combine */
 
-  //  val dcFromEmdMappings = List("title")
-  //    .map(s => s"dc_$s" -> (emd \ s).map(_.text))
-
-  //val dcMappings = List("title", "description", "creator", "subject", "publisher",
-  //  "contributor", "date", "type", "format", "identifier", "source", "language", "relation",
-  //  "coverage", "rights")
-  //  .map(s => s"dc_$s" -> (dc \ s).map(_.text))
-
-  val dcMappings = dcTitleFromEmdMappings ++
-    dcPublisherFromEmdMappings ++
-    dcCreatorFromEmdMappings ++
-    dcContributorFromEmdMappings ++
-    dcDateFromEmdMappings ++
-    dcRelationFromEmdMappings ++
-    dcCoverageFromEmdMappings ++
+  val dcMappings = dcTitleFromEmdMapping ::
+    dcPublisherFromEmdMapping ::
+    dcCreatorFromEmdMapping ::
+    dcContributorFromEmdMapping ::
+    dcDateFromEmdMapping ::
+    dcRelationFromEmdMapping ::
+    dcCoverageFromEmdMapping ::
     dcOtherFromEmdMappings
 
-  //val dcMappingsSort = List("title", "creator", "publisher", "contributor")
-  //  .map(s => s"dc_${s}_s" -> (dc \\ s).map(_.text))
+  val dcMappingsSort = (s"${dcCreatorKey}_s" -> dcCreatorValues) ::
+    (s"${dcContributorKey}_s" -> dcContributorValues) ::
+    (s"${dcTitleKey}_s" -> dcTitleValues) ::
+    (s"${dcPublisherKey}_s" -> dcPublisherValues) ::
+    Nil
 
-  val dcMappingsSort = dcCreatorSort ++ dcContributorSort ++ dcTitleSort ++ dcPublisherSort
-
-  /** emd */
+  /* emd */
 
   val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
     .map(s => s"emd_date_${s}" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
@@ -175,22 +167,22 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
 
   val otherMappings =
-      List("amd_assignee_id" -> (amd \ "workflowData" \ "assigneeId").map(_.text),
-        "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
-        "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").count(isRequiredAndCompletedStep).toString),
-        "ds_state" -> (amd \ "datasetState").map(_.text),
-        "ds_accesscategory" -> (emd \ "rights" \ "accessRights").map(_.text),
-        "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
-        "psl_permission_status" -> (prsl \ "sequences" \\ "sequence").map(formatPrslString),
-        "archaeology_dc_subject" -> (emd \ "subject" \ "subject").filter(isArchaeologySubject).map(_.text),
-        "archaeology_dcterms_temporal" -> (emd \ "coverage" \ "temporal").filter(isArchaeologyTemporal).map(_.text),
-        "dai_creator" -> ((emd \\ "creator" \ "creator").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
-        "dai_contributor" -> ((emd \\ "contributor" \ "contributor").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
-        "easy_collections" -> (relsExt \\ "Description" \ "isCollectionMember")
-          .map(_.attribute(RDF_NAMESPACE, "resource") match {
-            case Some(attr) => attr.text.replace("info:fedora/", "")
-            case _ => ""
-          }))
+    List("amd_assignee_id" -> (amd \ "workflowData" \ "assigneeId").map(_.text),
+      "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
+      "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").count(isRequiredAndCompletedStep).toString),
+      "ds_state" -> (amd \ "datasetState").map(_.text),
+      "ds_accesscategory" -> (emd \ "rights" \ "accessRights").map(_.text),
+      "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
+      "psl_permission_status" -> (prsl \ "sequences" \\ "sequence").map(formatPrslString),
+      "archaeology_dc_subject" -> (emd \ "subject" \ "subject").filter(isArchaeologySubject).map(_.text),
+      "archaeology_dcterms_temporal" -> (emd \ "coverage" \ "temporal").filter(isArchaeologyTemporal).map(_.text),
+      "dai_creator" -> ((emd \\ "creator" \ "creator").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
+      "dai_contributor" -> ((emd \\ "contributor" \ "contributor").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
+      "easy_collections" -> (relsExt \\ "Description" \ "isCollectionMember")
+        .map(_.attribute(RDF_NAMESPACE, "resource") match {
+          case Some(attr) => attr.text.replace("info:fedora/", "")
+          case _ => ""
+        }))
 
   def isRequiredAndCompletedStep(n: Node): Boolean = {
     val required =  n \ "required"
@@ -220,20 +212,20 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     List((n \ "requesterId").text, (n \ "state").text, (n \ "stateLastModified").text).mkString(" ")
 
   def toXml: Elem =
-      <doc>
-        <!-- Some standard fields that need to be here, in this order. Don't ask ... -->
-        <field name="type">easy-dataset</field>
-        <field name="type">dataset</field>
-        <field name="repository_id">easy</field>
+    <doc>
+      <!-- Some standard fields that need to be here, in this order. Don't ask ... -->
+      <field name="type">easy-dataset</field>
+      <field name="type">dataset</field>
+      <field name="repository_id">easy</field>
 
-        <!-- Fields based on metadata -->
-        <field name="sid">{pid}</field>
-        {dcMappings.flatMap(f => createField(f._1, f._2))}
-        {dcMappingsSort.flatMap(f => createSortField(f._1, f._2))}
-        {emdDateMappings.flatMap(f => createField(f._1, f._2))}
-        {emdFormattedDateMappings.flatMap(f => createField(f._1, f._2))}
-        {otherMappings.flatMap(f => createField(f._1, f._2))}
-      </doc>
+      <!-- Fields based on metadata -->
+      <field name="sid">{pid}</field>
+      {dcMappings.flatMap(f => createField(f._1, f._2))}
+      {dcMappingsSort.flatMap(f => createSortField(f._1, f._2))}
+      {emdDateMappings.flatMap(f => createField(f._1, f._2))}
+      {emdFormattedDateMappings.flatMap(f => createField(f._1, f._2))}
+      {otherMappings.flatMap(f => createField(f._1, f._2))}
+    </doc>
 
   def createField(name: String, values: Seq[String]): NodeSeq =
     values.map(value => <field name={name}>{value}</field>)
