@@ -193,6 +193,19 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     sortContributor should contain("contributor-org1 contributor-org2")
   }
 
+  "dc_publisher_s" should "be empty if there are no publishers" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:publisher>
+        </emd:publisher>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+
+    val sortPublisher = getSolrDocFieldValues(docRoot, "dc_publisher_s")
+    sortPublisher should have length 0
+  }
+
   "dc_date" should "have formated dates for eas:scheme=\"W3CDTF\"" in {
     expectEmd(
       <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
