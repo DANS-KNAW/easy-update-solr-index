@@ -31,6 +31,8 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   val prsl = XML.loadString(fedora.getPrsql(pid))
   val relsExt = XML.loadString(fedora.getRelsExt(pid))
 
+  /* dc */
+
   /* with sort fields */
 
   def extract(name: String)(f: Node => String): (String, Seq[String]) = {
