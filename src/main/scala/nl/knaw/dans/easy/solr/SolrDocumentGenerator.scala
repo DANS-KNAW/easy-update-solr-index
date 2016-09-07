@@ -35,16 +35,16 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
 
   /* with sort fields */
 
-  def extract(name: String)(f: Node => String): (String, Seq[String]) = {
+  def extractMappingFromEmd(name: String)(f: Node => String): (String, Seq[String]) = {
     s"dc_$name" -> (emd \ name \ "_").map(f)
   }
 
-  val dcTitleFromEmdMapping@(dcTitleKey, dcTitleValues) = extract("title")(_.text)
+  val dcTitleFromEmdMapping@(dcTitleKey, dcTitleValues) = extractMappingFromEmd("title")(_.text)
 
-  val dcPublisherFromEmdMapping@(dcPublisherKey, dcPublisherValues) = extract("publisher")(_.text)
+  val dcPublisherFromEmdMapping@(dcPublisherKey, dcPublisherValues) = extractMappingFromEmd("publisher")(_.text)
 
   def extractPersonOrganizationForDc(p: Node) = {
-    // formatting the persons name
+    // formatting the person's name
     val nameStart = (p \ "surname").text
     val nameEnd = List("title", "initials", "prefix").map(s => (p \ s).text).filter(_.nonEmpty).mkString(" ")
     val name = List(nameStart, nameEnd).filter(_.nonEmpty).mkString(", ")
@@ -55,12 +55,12 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     else org
   }
 
-  val dcCreatorFromEmdMapping@(dcCreatorKey, dcCreatorValues) = extract("creator")(n => {
+  val dcCreatorFromEmdMapping@(dcCreatorKey, dcCreatorValues) = extractMappingFromEmd("creator")(n => {
     if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
     else n.text
   })
 
-  val dcContributorFromEmdMapping@(dcContributorKey, dcContributorValues) = extract("contributor")(n => {
+  val dcContributorFromEmdMapping@(dcContributorKey, dcContributorValues) = extractMappingFromEmd("contributor")(n => {
     if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
     else n.text
   })
@@ -68,9 +68,9 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   /* without sort fields */
 
   val dcOtherFromEmdMappings = List("description", "subject", "type", "format", "identifier", "source", "language", "rights")
-    .map(s => extract(s)(_.text))
+    .map(s => extractMappingFromEmd(s)(_.text))
 
-  val dcDateFromEmdMapping = extract("date")(n => {
+  val dcDateFromEmdMapping = extractMappingFromEmd("date")(n => {
     if (isFormattableDate(n)) IsoDate.format(n.text, getPrecision(n))
     else n.text
   })
@@ -83,7 +83,7 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
   }
 
-  val dcRelationFromEmdMapping = extract("relation")(n => {
+  val dcRelationFromEmdMapping = extractMappingFromEmd("relation")(n => {
     if (n.namespace == EAS_NAMESPACE) extractRelationForDc(n)
     else n.text
   })
@@ -105,7 +105,7 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
   }
 
-  val dcCoverageFromEmdMapping = extract("coverage")(n => {
+  val dcCoverageFromEmdMapping = extractMappingFromEmd("coverage")(n => {
     if (n.label == "spatial") extractSpatialForDc(n)
     else n.text
   })
