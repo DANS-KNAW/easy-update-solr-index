@@ -15,9 +15,10 @@
  */
 package nl.knaw.dans.easy.solr
 
-import org.joda.time.{DateTimeZone, DateTime}
-import org.slf4j.{LoggerFactory, Logger}
+import org.joda.time.{DateTime, DateTimeZone}
+import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.immutable.Seq
 import scala.xml._
 
 class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = LoggerFactory.getLogger(getClass)) {
@@ -25,19 +26,108 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   val EAS_NAMESPACE: String = "http://easy.dans.knaw.nl/easy/easymetadata/eas/"
   val RDF_NAMESPACE: String = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
-  val dc = XML.loadString(fedora.getDc(pid))
   val emd = XML.loadString(fedora.getEmd(pid))
   val amd = XML.loadString(fedora.getAmd(pid))
   val prsl = XML.loadString(fedora.getPrsql(pid))
   val relsExt = XML.loadString(fedora.getRelsExt(pid))
 
-  val dcMappings = List("title", "description", "creator", "subject", "publisher",
-    "contributor", "date", "type", "format", "identifier", "source", "language", "relation",
-    "coverage", "rights")
-    .map(s => s"dc_$s" -> (dc \ s).map(_.text))
+  /* dc */
 
-  val dcMappingsSort = List("title", "creator", "publisher", "contributor")
-    .map(s => s"dc_${s}_s" -> (dc \\ s).map(_.text))
+  /* with sort fields */
+
+  def extractMappingFromEmd(name: String)(f: Node => String): (String, Seq[String]) = {
+    s"dc_$name" -> (emd \ name \ "_").map(f)
+  }
+
+  val dcTitleFromEmdMapping@(dcTitleKey, dcTitleValues) = extractMappingFromEmd("title")(_.text)
+
+  val dcPublisherFromEmdMapping@(dcPublisherKey, dcPublisherValues) = extractMappingFromEmd("publisher")(_.text)
+
+  def extractPersonOrganizationForDc(p: Node) = {
+    // formatting the person's name
+    val nameStart = (p \ "surname").text
+    val nameEnd = List("title", "initials", "prefix").map(s => (p \ s).text).filter(_.nonEmpty).mkString(" ")
+    val name = List(nameStart, nameEnd).filter(_.nonEmpty).mkString(", ")
+    val org = (p \ "organization").text
+
+    if (org.isEmpty) name
+    else if (name.nonEmpty) s"$name ($org)"
+    else org
+  }
+
+  val dcCreatorFromEmdMapping@(dcCreatorKey, dcCreatorValues) = extractMappingFromEmd("creator")(n => {
+    if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
+    else n.text
+  })
+
+  val dcContributorFromEmdMapping@(dcContributorKey, dcContributorValues) = extractMappingFromEmd("contributor")(n => {
+    if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
+    else n.text
+  })
+
+  /* without sort fields */
+
+  val dcOtherFromEmdMappings = List("description", "subject", "type", "format", "identifier", "source", "language", "rights")
+    .map(s => extractMappingFromEmd(s)(_.text))
+
+  val dcDateFromEmdMapping = extractMappingFromEmd("date")(n => {
+    if (isFormattableDate(n)) IsoDate.format(n.text, getPrecision(n))
+    else n.text
+  })
+
+  def extractRelationForDc(relation: Node) = {
+    ((relation \\ "subject-title").text, (relation \\ "subject-link").text) match {
+      case (title, "") => s"title=$title"
+      case ("", uri) => s"URI=$uri"
+      case (title, uri) => s"title=$title URI=$uri"
+    }
+  }
+
+  val dcRelationFromEmdMapping = extractMappingFromEmd("relation")(n => {
+    if (n.namespace == EAS_NAMESPACE) extractRelationForDc(n)
+    else n.text
+  })
+
+  def extractPointForDc(point: Node) = {
+    s"scheme=${point.attribute(EAS_NAMESPACE, "scheme").get} x=${(point \ "x").text} y=${(point \ "y").text}"
+  }
+
+  def extractBoxForDc(box: Node) = {
+    val coordinates = List("north", "east", "south", "west").map(cn => s"$cn=${(box \ cn).text}").mkString(" ")
+    s"scheme=${box.attribute(EAS_NAMESPACE, "scheme").get} $coordinates"
+  }
+
+  def extractSpatialForDc(spatial: Node) = {
+    (spatial \ "point", spatial \ "box") match {
+      case (Seq(), Seq()) => spatial.text
+      case (pointSeq, Seq()) => extractPointForDc(pointSeq.head)
+      case (Seq(), boxSeq) => extractBoxForDc(boxSeq.head)
+    }
+  }
+
+  val dcCoverageFromEmdMapping = extractMappingFromEmd("coverage")(n => {
+    if (n.label == "spatial") extractSpatialForDc(n)
+    else n.text
+  })
+
+  /* combine */
+
+  val dcMappings = dcTitleFromEmdMapping ::
+    dcPublisherFromEmdMapping ::
+    dcCreatorFromEmdMapping ::
+    dcContributorFromEmdMapping ::
+    dcDateFromEmdMapping ::
+    dcRelationFromEmdMapping ::
+    dcCoverageFromEmdMapping ::
+    dcOtherFromEmdMappings
+
+  val dcMappingsSort = (s"${dcCreatorKey}_s" -> dcCreatorValues) ::
+    (s"${dcContributorKey}_s" -> dcContributorValues) ::
+    (s"${dcTitleKey}_s" -> dcTitleValues) ::
+    (s"${dcPublisherKey}_s" -> dcPublisherValues) ::
+    Nil
+
+  /* emd */
 
   val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
     .map(s => s"emd_date_${s}" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
@@ -69,22 +159,22 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
 
   val otherMappings =
-      List("amd_assignee_id" -> (amd \ "workflowData" \ "assigneeId").map(_.text),
-        "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
-        "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").count(isRequiredAndCompletedStep).toString),
-        "ds_state" -> (amd \ "datasetState").map(_.text),
-        "ds_accesscategory" -> (emd \ "rights" \ "accessRights").map(_.text),
-        "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
-        "psl_permission_status" -> (prsl \ "sequences" \\ "sequence").map(formatPrslString),
-        "archaeology_dc_subject" -> (emd \ "subject" \ "subject").filter(isArchaeologySubject).map(_.text),
-        "archaeology_dcterms_temporal" -> (emd \ "coverage" \ "temporal").filter(isArchaeologyTemporal).map(_.text),
-        "dai_creator" -> ((emd \\ "creator" \ "creator").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
-        "dai_contributor" -> ((emd \\ "contributor" \ "contributor").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
-        "easy_collections" -> (relsExt \\ "Description" \ "isCollectionMember")
-          .map(_.attribute(RDF_NAMESPACE, "resource") match {
-            case Some(attr) => attr.text.replace("info:fedora/", "")
-            case _ => ""
-          }))
+    List("amd_assignee_id" -> (amd \ "workflowData" \ "assigneeId").map(_.text),
+      "amd_depositor_id" -> (amd \ "depositorId").map(_.text),
+      "amd_workflow_progress" -> List((amd \ "workflowData" \\ "workflow").count(isRequiredAndCompletedStep).toString),
+      "ds_state" -> (amd \ "datasetState").map(_.text),
+      "ds_accesscategory" -> (emd \ "rights" \ "accessRights").map(_.text),
+      "emd_audience" -> (emd \ "audience" \ "audience").map(_.text),
+      "psl_permission_status" -> (prsl \ "sequences" \\ "sequence").map(formatPrslString),
+      "archaeology_dc_subject" -> (emd \ "subject" \ "subject").filter(isArchaeologySubject).map(_.text),
+      "archaeology_dcterms_temporal" -> (emd \ "coverage" \ "temporal").filter(isArchaeologyTemporal).map(_.text),
+      "dai_creator" -> ((emd \\ "creator" \ "creator").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
+      "dai_contributor" -> ((emd \\ "contributor" \ "contributor").filter(_.namespace == EAS_NAMESPACE) \ "entityId").filter(hasDaiScheme).map(_.text),
+      "easy_collections" -> (relsExt \\ "Description" \ "isCollectionMember")
+        .map(_.attribute(RDF_NAMESPACE, "resource") match {
+          case Some(attr) => attr.text.replace("info:fedora/", "")
+          case _ => ""
+        }))
 
   def isRequiredAndCompletedStep(n: Node): Boolean = {
     val required =  n \ "required"
@@ -114,20 +204,20 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     List((n \ "requesterId").text, (n \ "state").text, (n \ "stateLastModified").text).mkString(" ")
 
   def toXml: Elem =
-      <doc>
-        <!-- Some standard fields that need to be here, in this order. Don't ask ... -->
-        <field name="type">easy-dataset</field>
-        <field name="type">dataset</field>
-        <field name="repository_id">easy</field>
+    <doc>
+      <!-- Some standard fields that need to be here, in this order. Don't ask ... -->
+      <field name="type">easy-dataset</field>
+      <field name="type">dataset</field>
+      <field name="repository_id">easy</field>
 
-        <!-- Fields based on metadata -->
-        <field name="sid">{pid}</field>
-        {dcMappings.flatMap(f => createField(f._1, f._2))}
-        {dcMappingsSort.flatMap(f => createSortField(f._1, f._2))}
-        {emdDateMappings.flatMap(f => createField(f._1, f._2))}
-        {emdFormattedDateMappings.flatMap(f => createField(f._1, f._2))}
-        {otherMappings.flatMap(f => createField(f._1, f._2))}
-      </doc>
+      <!-- Fields based on metadata -->
+      <field name="sid">{pid}</field>
+      {dcMappings.flatMap(f => createField(f._1, f._2))}
+      {dcMappingsSort.flatMap(f => createSortField(f._1, f._2))}
+      {emdDateMappings.flatMap(f => createField(f._1, f._2))}
+      {emdFormattedDateMappings.flatMap(f => createField(f._1, f._2))}
+      {otherMappings.flatMap(f => createField(f._1, f._2))}
+    </doc>
 
   def createField(name: String, values: Seq[String]): NodeSeq =
     values.map(value => <field name={name}>{value}</field>)

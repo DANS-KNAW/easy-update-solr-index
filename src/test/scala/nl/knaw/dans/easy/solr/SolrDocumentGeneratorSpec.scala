@@ -46,14 +46,14 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning xml.toString
   private def expectWarningLogged() = (log.warn(_: String)) expects * atLeastOnce()
 
-
   private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] =
     (docRoot \\ "doc" \ "field").filter(f => (f \ "@name").text == field).map(_.text)
 
   /*
    * Tests
    */
-  "minimal DC" should "result in only standard fields" in {
+
+  "minimal EMD" should "result in only standard fields" in {
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
 
@@ -67,33 +67,237 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     fields should contain("amd_workflow_progress" -> "0")
   }
 
-  "one DC element" should "result in normal and sortable fields" in {
-    expectDc(
-      <dc>
-        <title>Some title</title>
-      </dc>)
+  "all dc_* fields" should "be extracted from EMD" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+      <emd:title>
+        <dc:title>title</dc:title>
+      </emd:title>
+      <emd:description>
+        <dc:description>description</dc:description>
+      </emd:description>
+      <emd:publisher>
+        <dc:publisher>publisher</dc:publisher>
+      </emd:publisher>
+      <emd:subject>
+        <dc:subject>subject</dc:subject>
+      </emd:subject>
+      <emd:type>
+        <dc:type eas:scheme="DCMI" eas:schemeId="common.dc.type">Dataset</dc:type>
+      </emd:type>
+      <emd:format>
+        <dc:format>format</dc:format>
+      </emd:format>
+      <emd:identifier>
+        <dc:identifier eas:scheme="DMO_ID">easy-dataset:123</dc:identifier>
+      </emd:identifier>
+      <emd:source>
+        <dc:source>source</dc:source>
+      </emd:source>
+      <emd:language>
+        <dc:language eas:scheme="ISO 639" eas:schemeId="common.dc.language">dut/nld</dc:language>
+      </emd:language>
+      <emd:rights>
+        <dct:accessRights eas:schemeId="archaeology.dcterms.accessrights">OPEN_ACCESS</dct:accessRights>
+      </emd:rights>
+      <emd:coverage>
+        <dct:spatial>spatial</dct:spatial>
+      </emd:coverage>
+      <emd:date>
+        <dct:created>2016-01-01</dct:created>
+      </emd:date>
+        <emd:relation>
+          <dc:relation>relation</dc:relation>
+        </emd:relation>
+        <emd:creator>
+          <eas:creator>
+            <eas:organization>creator-org</eas:organization>
+          </eas:creator>
+        </emd:creator>
+        <emd:contributor>
+          <eas:contributor>
+            <eas:organization>contributor-org</eas:organization>
+          </eas:contributor>
+        </emd:contributor>
+    </easymetadata>)
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
     val fields = (docRoot \ "field").map(f => (f \ "@name").text -> f.text)
 
-    fields should contain("sid" -> "test-pid:123")
-    fields should contain("dc_title" -> "Some title")
-    fields should contain("dc_title_s" -> "Some title")
+    fields should contain("dc_title" -> "title")
+    fields should contain("dc_description" -> "description")
+    fields should contain("dc_subject" -> "subject")
+    fields should contain("dc_type" -> "Dataset")
+    fields should contain("dc_format" -> "format")
+    fields should contain("dc_identifier" -> "easy-dataset:123")
+    fields should contain("dc_source" -> "source")
+    fields should contain("dc_language" -> "dut/nld")
+    fields should contain("dc_publisher" -> "publisher")
+    fields should contain("dc_rights" -> "OPEN_ACCESS")
+    fields should contain("dc_coverage" -> "spatial")
+    fields should contain("dc_date" -> "2016-01-01")
+    fields should contain("dc_relation" -> "relation")
+    fields should contain("dc_creator" -> "creator-org")
+    fields should contain("dc_contributor" -> "contributor-org")
+    fields should contain("dc_title_s" -> "title")
+    fields should contain("dc_creator_s" -> "creator-org")
+    fields should contain("dc_publisher_s" -> "publisher")
+    fields should contain("dc_contributor_s" -> "contributor-org")
   }
 
-  "Sort field with multiple values" should "result in concatenated values" in {
-    expectDc(
-      <dc>
-        <dc:title>Title 1</dc:title>
-        <dc:title>Title 2</dc:title>
-        <dc:description>My description</dc:description>
-      </dc>)
+  "dc_*_s sort fields with multiple values" should "contain concatenated values" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:title>
+          <dc:title>title1</dc:title>
+          <dc:title>title2</dc:title>
+        </emd:title>
+        <emd:publisher>
+          <dc:publisher>publisher1</dc:publisher>
+          <dc:publisher>publisher2</dc:publisher>
+        </emd:publisher>
+        <emd:creator>
+          <eas:creator>
+            <eas:organization>creator-org1</eas:organization>
+          </eas:creator>
+          <eas:creator>
+            <eas:organization>creator-org2</eas:organization>
+          </eas:creator>
+        </emd:creator>
+        <emd:contributor>
+          <eas:contributor>
+            <eas:organization>contributor-org1</eas:organization>
+          </eas:contributor>
+          <eas:contributor>
+            <eas:organization>contributor-org2</eas:organization>
+          </eas:contributor>
+        </emd:contributor>
+      </easymetadata>)
     expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val sortTitle = getSolrDocFieldValues(docRoot, "dc_title_s")
 
+    val sortTitle = getSolrDocFieldValues(docRoot, "dc_title_s")
     sortTitle should have length 1
-    sortTitle should contain("Title 1 Title 2")
+    sortTitle should contain("title1 title2")
+
+    val sortPublisher = getSolrDocFieldValues(docRoot, "dc_publisher_s")
+    sortPublisher should have length 1
+    sortPublisher should contain("publisher1 publisher2")
+
+    val sortCreator = getSolrDocFieldValues(docRoot, "dc_creator_s")
+    sortCreator should have length 1
+    sortCreator should contain("creator-org1 creator-org2")
+
+    val sortContributor = getSolrDocFieldValues(docRoot, "dc_contributor_s")
+    sortContributor should have length 1
+    sortContributor should contain("contributor-org1 contributor-org2")
+  }
+
+  "dc_publisher_s" should "be empty if there are no publishers" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:publisher>
+        </emd:publisher>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+
+    val sortPublisher = getSolrDocFieldValues(docRoot, "dc_publisher_s")
+    sortPublisher should have length 0
+  }
+
+  "dc_date" should "have formated dates for eas:scheme=\"W3CDTF\"" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:date>
+          <dct:created>1991-01-01 to 1993-12-31</dct:created>
+          <eas:dateSubmitted eas:scheme="W3CDTF" eas:format="DAY">1994-01-01T00:00:00.000+01:00</eas:dateSubmitted>
+        </emd:date>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+    val dcDates = getSolrDocFieldValues(docRoot, "dc_date")
+    dcDates should contain("1991-01-01 to 1993-12-31")
+    dcDates should contain("1994-01-01")
+  }
+
+  "dc_creator" should "contain correctly formatted personal and organisation content" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:creator>
+          <eas:creator>
+            <eas:title>title</eas:title>
+            <eas:initials>I.N.I.T.I.A.L.S.</eas:initials>
+            <eas:prefix>prefix</eas:prefix>
+            <eas:surname>surmane</eas:surname>
+            <eas:organization>org</eas:organization>
+            <eas:entityId eas:scheme="DAI"></eas:entityId>
+          </eas:creator>
+          <eas:creator>
+            <eas:organization>org</eas:organization>
+          </eas:creator>
+          <dc:creator>creator-in-plain-text</dc:creator>
+        </emd:creator>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+    val dcCreators = getSolrDocFieldValues(docRoot, "dc_creator")
+    dcCreators should contain("surmane, title I.N.I.T.I.A.L.S. prefix (org)")
+    dcCreators should contain("org")
+    dcCreators should contain("creator-in-plain-text")
+  }
+
+  "dc_coverage" should "contain point and box coordinates when available" in {
+  expectEmd(
+    <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+      <emd:coverage>
+        <dct:spatial>spatial1</dct:spatial>
+        <dct:temporal eas:scheme="ABR" eas:schemeId="archaeology.dcterms.temporal">IJZL</dct:temporal>
+        <eas:spatial>
+          <eas:point eas:scheme="RD">
+            <eas:x>155000</eas:x>
+            <eas:y>463000</eas:y>
+          </eas:point>
+        </eas:spatial>
+        <eas:spatial>
+          <eas:box eas:scheme="RD">
+            <eas:north>1</eas:north>
+            <eas:east>3</eas:east>
+            <eas:south>4</eas:south>
+            <eas:west>2</eas:west>
+          </eas:box>
+        </eas:spatial>
+      </emd:coverage>
+    </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+    val dcCoverage = getSolrDocFieldValues(docRoot, "dc_coverage")
+    dcCoverage should contain("spatial1")
+    dcCoverage should contain("IJZL")
+    dcCoverage should contain("scheme=RD x=155000 y=463000")
+    dcCoverage should contain("scheme=RD north=1 east=3 south=4 west=2")
+  }
+
+  "dc_relation" should "contain correctly handled title and uri" in {
+    expectEmd(
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:relation>
+          <dc:relation>relation</dc:relation>
+          <eas:relation>
+            <eas:subject-title>no-qualif</eas:subject-title>
+          </eas:relation>
+          <eas:references>
+            <eas:subject-title>ref-title</eas:subject-title>
+            <eas:subject-link>http://dans.knaw.nl</eas:subject-link>
+          </eas:references>
+        </emd:relation>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+    val dcRelation = getSolrDocFieldValues(docRoot, "dc_relation")
+    dcRelation should contain("relation")
+    dcRelation should contain("title=no-qualif")
+    dcRelation should contain("title=ref-title URI=http://dans.knaw.nl")
   }
 
   "archaeology_dc_subject" should "only get values from subject fields with corresponding schemeId attribute" in {
