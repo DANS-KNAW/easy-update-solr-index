@@ -15,13 +15,9 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.io.File
 import java.net.URL
 
-import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.ScallopConf
-
-import scala.collection.JavaConverters._
 
 /**
  * Creates a set of parsed and validated command line arguments.
@@ -30,8 +26,10 @@ import scala.collection.JavaConverters._
  *             Though --version or --help would validate, Scallop will call System.exit(0).
  *             Otherwise the default option values make no sense.
  */
-class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")
-            ) extends ScallopConf(args) {
+class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")) extends ScallopConf(args) {
+
+  appendDefaultToDescription = true
+  editBuilder(_.setHelpWidth(110))
 
   printedName = "easy-update-solr-index"
 
@@ -68,4 +66,6 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")
       "a file with a dataset id per line or " +
       "a fedora query that selects datasets (for example 'pid~easy-dataset:*', " +
       "see also help for 'specific fields' on <fcrepo-server>/objects) ")
+
+  verify()
 }

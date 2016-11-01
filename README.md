@@ -22,17 +22,13 @@ dataset(s)
 ARGUMENTS
 ---------
 
-     -b, --dataset-batch-size  <arg>   Number of datasets to update at once,
-                                       maximized by fedora to 100 when selecting
-                                       datasets with a query
-     -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a batch
-                                       of datasets to avoid reducing performance of
-                                       the production system too much
-     -d, --debug                       If specified: only generate document(s), do
-                                       not send anything to SOLR
+     -b, --dataset-batch-size  <arg>   Number of datasets to update at once, maximized by fedora to 100 when
+                                       selecting datasets with a query
+     -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a batch of datasets to avoid
+                                       reducing performance of the production system too much
+     -d, --debug                       If specified: only generate document(s), do not send anything to SOLR
      -p, --fcrepo-password  <arg>      Password for fcrepo-user
-     -f, --fcrepo-server  <arg>        URL of Fedora Commons Repository Server to
-                                       connect to
+     -f, --fcrepo-server  <arg>        URL of Fedora Commons Repository Server to connect to
      -u, --fcrepo-user  <arg>          User to connect to fcrepo-server
      -o, --output                      If provided: output SOLR document(s) to stdout
      -s, --solr-update-url  <arg>      URL to POST SOLR documents to
@@ -40,11 +36,9 @@ ARGUMENTS
          --version                     Show version of this program
    
     trailing arguments:
-     dataset-ids (required)   One or more of: dataset id (for example
-                              'easy-dataset:1'), a file with a dataset id per line or
-                              a fedora query that selects datasets (for example
-                              'pid~easy-dataset:*', see also help for 'specific
-                              fields' on <fcrepo-server>/objects) 
+     dataset-ids (required)   One or more of: dataset id (for example 'easy-dataset:1'), a file with a dataset id
+                              per line or a fedora query that selects datasets (for example 'pid~easy-dataset:*',
+                              see also help for 'specific fields' on <fcrepo-server>/objects)
 
 
 
