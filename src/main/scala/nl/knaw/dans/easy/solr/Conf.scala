@@ -26,21 +26,23 @@ import org.rogach.scallop.ScallopConf
  *             Though --version or --help would validate, Scallop will call System.exit(0).
  *             Otherwise the default option values make no sense.
  */
-class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")) extends ScallopConf(args) {
+class Conf(args: Seq[String]) extends ScallopConf(args) {
 
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
 
   printedName = "easy-update-solr-index"
+  val description = """Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository."""
+  val synopsis = s"""$printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ..."""
 
   version(s"$printedName ${Version()}")
   banner(s"""
-            | Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.
+            | $description
             |
-            | Usage:
-            |    $printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ...
+            |Usage:
+            |    $synopsis
             |
-            | Options:
+            |Options:
             |""".stripMargin)
 
   val fedora = opt[URL]("fcrepo-server", required = true, short= 'f',

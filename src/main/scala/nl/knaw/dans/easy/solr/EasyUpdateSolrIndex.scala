@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Elem, PrettyPrinter}
+import scala.xml.PrettyPrinter
 
 object EasyUpdateSolrIndex {
 
@@ -69,7 +69,7 @@ object EasyUpdateSolrIndex {
     }
     else {
       log.info(s"defaults from ${propsFile.getAbsolutePath}")
-      filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(), args)
+      filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(Seq[String]()), args)
     }
   }
 
