@@ -20,7 +20,7 @@ import java.io.File
 import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 class DefaultsSpec extends FlatSpec with Matchers {
 
@@ -38,24 +38,32 @@ class DefaultsSpec extends FlatSpec with Matchers {
     new PropertiesConfiguration(tmpFile)
   }
 
-  // TODO make tests independent by replacing 'new Conf()' with local mini subclass of ScallopConf
+  private def TestConf(args: Array[String]) = {
+    new Conf(args) {
+      // avoids System.exit() in case of invalid arguments or "--help"
+      override def verify(): Unit = {}
+    }
+  }
 
-  "minimal args plus defaults" should "parse" in {
+  "minimal command line" should "apply default values" in {
 
-    val args = "pid~easy-dataset:*".split(" ")
-    val completedArgs = filterDefaultOptions(props, new Conf(), args) ++ args
+    val args = "easy-dataset:1".split(" ")
+    val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    new Conf(completedArgs).batchSize.apply() shouldBe 100
+    val conf = new Conf(completedArgs)
+    conf.batchSize() shouldBe 100
+    conf.timeout() shouldBe 1000
+    conf.user() shouldBe "somebody"
   }
 
   "command line values" should "have precedence over default values" in {
 
     val args = "-b3 -u u --dataset-timeout 6 easy-dataset:1".split(" ")
-    val completedArgs = filterDefaultOptions(props, new Conf(), args) ++ args
+    val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
     val conf = new Conf(completedArgs)
-    conf.batchSize.apply() shouldBe 3
-    conf.timeout.apply() shouldBe 6
-    conf.user.apply() shouldBe "u"
+    conf.batchSize() shouldBe 3
+    conf.timeout() shouldBe 6
+    conf.user() shouldBe "u"
   }
 }
