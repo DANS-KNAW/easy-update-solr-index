@@ -69,7 +69,7 @@ object EasyUpdateSolrIndex {
     }
     else {
       log.info(s"defaults from ${propsFile.getAbsolutePath}")
-      filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(Seq[String]()), args)
+      filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(), args)
     }
   }
 

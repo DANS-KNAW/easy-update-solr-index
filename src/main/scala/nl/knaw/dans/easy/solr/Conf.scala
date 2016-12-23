@@ -26,7 +26,7 @@ import org.rogach.scallop.ScallopConf
  *             Though --version or --help would validate, Scallop will call System.exit(0).
  *             Otherwise the default option values make no sense.
  */
-class Conf(args: Seq[String]) extends ScallopConf(args) {
+class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")) extends ScallopConf(args) {
 
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
