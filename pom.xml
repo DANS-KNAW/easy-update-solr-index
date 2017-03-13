@@ -27,14 +27,14 @@
     <artifactId>easy-update-solr-index</artifactId>
     <name>EASY Update SOLR Index</name>
     <description>Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.</description>
-    <version>1.2</version>
+    <version>1.x-SNAPSHOT</version>
     <inceptionYear>2015-2016</inceptionYear>
     <properties>
         <main-class>nl.knaw.dans.easy.solr.EasyUpdateSolrIndex</main-class>
     </properties>
     <scm>
         <developerConnection>scm:git:https://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
-        <tag>v1.2</tag>
+        <tag>HEAD</tag>
     </scm>
     <dependencies>
         <dependency>
