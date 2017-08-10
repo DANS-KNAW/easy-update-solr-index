@@ -17,7 +17,7 @@ package nl.knaw.dans.easy.solr
 
 import com.yourmediashelf.fedora.client.FedoraClient._
 import com.yourmediashelf.fedora.client.request.FedoraRequest
-import com.yourmediashelf.fedora.client.{FedoraClientException, FedoraClient, FedoraCredentials}
+import com.yourmediashelf.fedora.client.{ FedoraClient, FedoraClientException, FedoraCredentials }
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 

@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.io.{File, FileInputStream}
+import java.io.{ File, FileInputStream }
 import java.lang.Thread._
 
 import com.yourmediashelf.fedora.client.FedoraClient._
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.xml.PrettyPrinter
 
 object EasyUpdateSolrIndex {

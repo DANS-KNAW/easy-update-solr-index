@@ -17,6 +17,7 @@ package nl.knaw.dans.easy.solr
 
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.ScallopConf
+
 import scala.collection.JavaConverters._
 
 object Defaults {

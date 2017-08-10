@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class IsoDateSpec extends FlatSpec
     with Matchers

@@ -20,7 +20,7 @@ import java.io.File
 import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class DefaultsSpec extends FlatSpec with Matchers {
 

@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.easy.solr
 
-import org.joda.time.{DateTime, DateTimeZone}
-import org.slf4j.{Logger, LoggerFactory}
+import org.joda.time.{ DateTime, DateTimeZone }
+import org.slf4j.{ Logger, LoggerFactory }
 
 import scala.collection.immutable.Seq
 import scala.xml._

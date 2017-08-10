@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.solr
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
 import org.slf4j.Logger
+
 import scala.xml._
 
 class SolrDocumentGeneratorSpec extends FlatSpec

@@ -15,11 +15,11 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.{ ByteArrayOutputStream, File }
 
 import nl.knaw.dans.easy.solr.CustomMatchers._
 import org.apache.commons.configuration.PropertiesConfiguration
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.collection.JavaConverters._
 
