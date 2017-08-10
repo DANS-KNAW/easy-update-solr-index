@@ -19,12 +19,12 @@ import com.yourmediashelf.fedora.client.FedoraClient._
 import com.yourmediashelf.fedora.client.request.FedoraRequest
 import com.yourmediashelf.fedora.client.{ FedoraClient, FedoraClientException, FedoraCredentials }
 import org.apache.commons.io.IOUtils
-import org.slf4j.LoggerFactory
+import org.slf4j.{ Logger, LoggerFactory }
 
 import scala.util.Try
 
 case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProvider {
-  val log = LoggerFactory.getLogger(getClass)
+  val log: Logger = LoggerFactory.getLogger(getClass)
   FedoraRequest.setDefaultClient(
     new FedoraClient(
       credentials

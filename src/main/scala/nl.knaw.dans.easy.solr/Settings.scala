@@ -26,13 +26,13 @@ object Settings {
     testMode = conf.debug(),
     output = conf.output(),
     datasets = conf.datasets.apply(),
-    solr = new SolrProviderImpl(conf.solr()),
-    fedora = new FedoraProviderImpl(
+    solr = SolrProviderImpl(conf.solr()),
+    fedora = FedoraProviderImpl(
       new FedoraCredentials(
         conf.fedora(),
         conf.user(),
         conf.password()
-      ) {override def toString = s"FedoraCredentials (${conf.fedora()}, ${conf.user()}, ...)"}
+      ) {override def toString = s"FedoraCredentials (${ conf.fedora() }, ${ conf.user() }, ...)" }
     )
   )
 
@@ -43,8 +43,8 @@ object Settings {
              ):Settings = new Settings(
     testMode = false,
     datasets = List(dataset),
-    solr = new SolrProviderImpl(solr),
-    fedora = new FedoraProviderImpl(fedoraCredentials)
+    solr = SolrProviderImpl(solr),
+    fedora = FedoraProviderImpl(fedoraCredentials)
   )
 }
 

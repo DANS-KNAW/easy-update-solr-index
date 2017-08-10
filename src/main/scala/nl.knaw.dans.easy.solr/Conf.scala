@@ -17,7 +17,7 @@ package nl.knaw.dans.easy.solr
 
 import java.net.URL
 
-import org.rogach.scallop.ScallopConf
+import org.rogach.scallop.{ ScallopConf, ScallopOption }
 
 /**
  * Creates a set of parsed and validated command line arguments.
@@ -46,25 +46,25 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")) 
             |Options:
             |""".stripMargin)
 
-  val fedora = opt[URL]("fcrepo-server", required = true, short= 'f',
+  val fedora: ScallopOption[URL] = opt[URL]("fcrepo-server", required = true, short= 'f',
     descr = "URL of Fedora Commons Repository Server to connect to ")
-  val user = opt[String]("fcrepo-user", required = true, short = 'u',
+  val user: ScallopOption[String] = opt[String]("fcrepo-user", required = true, short = 'u',
     descr = "User to connect to fcrepo-server")
-  val password = opt[String]("fcrepo-password", required = true, short = 'p',
+  val password: ScallopOption[String] = opt[String]("fcrepo-password", required = true, short = 'p',
     descr = "Password for fcrepo-user")
-  val solr = opt[URL]("solr-update-url", required = true, short ='s',
+  val solr: ScallopOption[URL] = opt[URL]("solr-update-url", required = true, short ='s',
     descr="URL to POST SOLR documents to")
-  val debug = opt[Boolean]("debug", default = Some(false), short = 'd',
+  val debug: ScallopOption[Boolean] = opt[Boolean]("debug", default = Some(false), short = 'd',
     descr = "If specified: only generate document(s), do not send anything to SOLR")
-  val output = opt[Boolean]("output", default = Some(false), short = 'o',
+  val output: ScallopOption[Boolean] = opt[Boolean]("output", default = Some(false), short = 'o',
     descr = "If provided: output SOLR document(s) to stdout")
-  val batchSize = opt[Int]("dataset-batch-size", required = true, short = 'b',
+  val batchSize: ScallopOption[Int] = opt[Int]("dataset-batch-size", required = true, short = 'b',
     descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting datasets with a query")
-  val timeout = opt[Int]("dataset-timeout", required = true, short = 't',
+  val timeout: ScallopOption[Int] = opt[Int]("dataset-timeout", required = true, short = 't',
     descr = "Milliseconds to pause after processing a batch of datasets " +
       "to avoid reducing performance of the production system too much")
 
-  val datasets = trailArg[List[String]]("dataset-ids",
+  val datasets: ScallopOption[List[String]] = trailArg[List[String]]("dataset-ids",
     descr = "One or more of: dataset id (for example 'easy-dataset:1'), " +
       "a file with a dataset id per line or " +
       "a fedora query that selects datasets (for example 'pid~easy-dataset:*', " +

@@ -29,8 +29,8 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   /*
    * Mocking and helper functions.
    */
-  val fedora = mock[FedoraProvider]
-  val log = mock[Logger]
+  val fedora: FedoraProvider = mock[FedoraProvider]
+  val log: Logger = mock[Logger]
 
   private def expectEmptyXmlByDefault = {
     expectDc(<dc/>)

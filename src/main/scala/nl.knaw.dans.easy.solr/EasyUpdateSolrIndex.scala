@@ -40,7 +40,7 @@ object EasyUpdateSolrIndex {
   }
 
   /** API for commandline, continues with the next batch if some dataset causes problems */
-  def main(args: Array[String]) = {
+  def main(args: Array[String]): Unit = {
 
     val propsFile = new File(System.getProperty("app.home",""), "cfg/application.properties")
     val completedArgs = getDefaults(args, propsFile) ++ args
@@ -50,7 +50,7 @@ object EasyUpdateSolrIndex {
     val queries = settings.datasets.filter(s => s.startsWith("pid~"))
     val ids = settings.datasets.toSet -- files -- queries
     executeBatches(ids.toSeq)
-    files.foreach(s => executeBatches(readLines(new FileInputStream(new File(s))).asScala.toSeq))
+    files.foreach(s => executeBatches(readLines(new FileInputStream(new File(s))).asScala))
     queries.foreach(datasetsFromQuery(_))
   }
 
@@ -84,7 +84,7 @@ object EasyUpdateSolrIndex {
       case Some(t) =>
         objectsQuery.sessionToken(t).execute
     }
-    execute (objectsResponse.getPids.asScala.toSeq)
+    execute (objectsResponse.getPids.asScala)
     if (objectsResponse.hasNext) datasetsFromQuery(query, Some(objectsResponse.getToken))
     else log.info(s"Finished $query")
   }
