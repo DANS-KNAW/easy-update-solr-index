@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,9 +39,9 @@ class ConfSpec extends FlatSpec with Matchers {
   }
 
   "options in help info" should "be part of README.md" in {
-    val lineSeparators = s"(${System.lineSeparator()})+"
-    val options = helpInfo.split(s"${lineSeparators}Options:$lineSeparators")(1)
-    options.trim.length shouldNot be (0)
+    val lineSeparators = s"(${ System.lineSeparator() })+"
+    val options = helpInfo.split(s"${ lineSeparators }Options:$lineSeparators")(1)
+    options.trim.length shouldNot be(0)
     new File("README.md") should containTrimmed(options)
   }
 
@@ -57,8 +57,8 @@ class ConfSpec extends FlatSpec with Matchers {
   "distributed default properties" should "be valid options" in {
     val optKeys = clo.builder.opts.map(opt => opt.name).toArray
     val propKeys = new PropertiesConfiguration("src/main/assembly/dist/cfg/application.properties")
-      .getKeys.asScala.withFilter(key => key.startsWith("default.") )
+      .getKeys.asScala.withFilter(key => key.startsWith("default."))
 
-    propKeys.foreach(key => optKeys should contain (key.replace("default.","")) )
+    propKeys.foreach(key => optKeys should contain(key.replace("default.", "")))
   }
 }

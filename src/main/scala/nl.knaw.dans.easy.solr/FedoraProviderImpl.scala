@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,7 @@ case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProv
   FedoraRequest.setDefaultClient(
     new FedoraClient(
       credentials
-    ) {override def toString = s"${super.toString} ($credentials)"}
+    ) {override def toString = s"${ super.toString } ($credentials)" }
   )
 
   private def datastreamToString(pid: String, dsId: String): String = {
@@ -41,7 +41,7 @@ case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProv
         // This body is just a web page wrapped around the status line.
         // The FedoraClientException does not provide the status line of the HTTP-response,
         // so we re-assemble a simple message for probable common errors.
-        s"Could not read datastream $dsId of $pid, HTTP code ${e.getStatus}, $credentials"
+        s"Could not read datastream $dsId of $pid, HTTP code ${ e.getStatus }, $credentials"
       )
     }.get.getEntityInputStream
     try {

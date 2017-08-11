@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,25 +35,26 @@ class Conf(args: Seq[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" ")) 
   val description = """Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository."""
   val synopsis = s"""$printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ..."""
 
-  version(s"$printedName ${Version()}")
-  banner(s"""
-            |  $description
-            |
+  version(s"$printedName ${ Version() }")
+  banner(
+    s"""
+       |  $description
+       |
             |Usage:
-            |
+       |
             |  $synopsis
-            |
+       |
             |Options:
-            |""".stripMargin)
+       |""".stripMargin)
 
-  val fedora: ScallopOption[URL] = opt[URL]("fcrepo-server", required = true, short= 'f',
+  val fedora: ScallopOption[URL] = opt[URL]("fcrepo-server", required = true, short = 'f',
     descr = "URL of Fedora Commons Repository Server to connect to ")
   val user: ScallopOption[String] = opt[String]("fcrepo-user", required = true, short = 'u',
     descr = "User to connect to fcrepo-server")
   val password: ScallopOption[String] = opt[String]("fcrepo-password", required = true, short = 'p',
     descr = "Password for fcrepo-user")
-  val solr: ScallopOption[URL] = opt[URL]("solr-update-url", required = true, short ='s',
-    descr="URL to POST SOLR documents to")
+  val solr: ScallopOption[URL] = opt[URL]("solr-update-url", required = true, short = 's',
+    descr = "URL to POST SOLR documents to")
   val debug: ScallopOption[Boolean] = opt[Boolean]("debug", default = Some(false), short = 'd',
     descr = "If specified: only generate document(s), do not send anything to SOLR")
   val output: ScallopOption[Boolean] = opt[Boolean]("output", default = Some(false), short = 'o',

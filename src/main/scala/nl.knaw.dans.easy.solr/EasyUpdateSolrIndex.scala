@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,14 +35,14 @@ object EasyUpdateSolrIndex {
 
   /** API for EasyIngestFlow, assumes a single dataset id, fails on any type of error */
   def run(implicit settings: Settings): Try[Unit] = Try {
-      settings.solr.update("<add>"+createSolrDoc(settings.datasets.head)+"</add>")
-      log.info(s"Committed ${settings.datasets.head} to SOLR index")
+    settings.solr.update("<add>" + createSolrDoc(settings.datasets.head) + "</add>")
+    log.info(s"Committed ${ settings.datasets.head } to SOLR index")
   }
 
   /** API for commandline, continues with the next batch if some dataset causes problems */
   def main(args: Array[String]): Unit = {
 
-    val propsFile = new File(System.getProperty("app.home",""), "cfg/application.properties")
+    val propsFile = new File(System.getProperty("app.home", ""), "cfg/application.properties")
     val completedArgs = getDefaults(args, propsFile) ++ args
     implicit val settings = Settings(new Conf(completedArgs))
 
@@ -55,27 +55,27 @@ object EasyUpdateSolrIndex {
   }
 
   @tailrec
-  def executeBatches (lines: Seq[String])(implicit settings: Settings): Unit = {
-    val (current,remainder) = lines.splitAt(settings.batchSize)
+  def executeBatches(lines: Seq[String])(implicit settings: Settings): Unit = {
+    val (current, remainder) = lines.splitAt(settings.batchSize)
     execute(current)
-    if(remainder.nonEmpty)
+    if (remainder.nonEmpty)
       executeBatches(remainder)
   }
 
   def getDefaults(args: Array[String], propsFile: File): Seq[String] = {
     if (!propsFile.exists) {
-      log.info(s"system property 'app.home' not set and/or could not find ${propsFile.getAbsolutePath}")
+      log.info(s"system property 'app.home' not set and/or could not find ${ propsFile.getAbsolutePath }")
       Array[String]()
     }
     else {
-      log.info(s"defaults from ${propsFile.getAbsolutePath}")
+      log.info(s"defaults from ${ propsFile.getAbsolutePath }")
       filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(), args)
     }
   }
 
   @tailrec
   def datasetsFromQuery(query: String, token: Option[String] = None)
-                 (implicit settings: Settings): Unit = {
+                       (implicit settings: Settings): Unit = {
     val objectsQuery = findObjects().maxResults(settings.batchSize).pid.query(query)
     val objectsResponse = token match {
       case None =>
@@ -84,7 +84,7 @@ object EasyUpdateSolrIndex {
       case Some(t) =>
         objectsQuery.sessionToken(t).execute
     }
-    execute (objectsResponse.getPids.asScala)
+    execute(objectsResponse.getPids.asScala)
     if (objectsResponse.hasNext) datasetsFromQuery(query, Some(objectsResponse.getToken))
     else log.info(s"Finished $query")
   }
@@ -92,10 +92,10 @@ object EasyUpdateSolrIndex {
   def execute(datasets: Seq[String])
              (implicit settings: Settings): Unit = {
     val docs = datasets.map(createSolrDoc).filter(_.nonEmpty)
-    val s = docs.mkString("<add>",",","</add>")
+    val s = docs.mkString("<add>", ",", "</add>")
     if (docs.nonEmpty) settings.solr.update(s) match {
-      case Success(_) => log.info(s"Committed ${docs.size} documents for ${datasets.size} datasets to SOLR index")
-      case Failure(e) => log.error(s"SOLR update FAILED: ${e.getMessage}", e)
+      case Success(_) => log.info(s"Committed ${ docs.size } documents for ${ datasets.size } datasets to SOLR index")
+      case Failure(e) => log.error(s"SOLR update FAILED: ${ e.getMessage }", e)
     }
     sleep(settings.timeout)
   }
@@ -114,7 +114,7 @@ object EasyUpdateSolrIndex {
       case Success(s) => s
       case Failure(e) =>
         // exception not in log, to avoid tons of stack traces in case of input errors
-        log.error(s"Fetching data for SOLR update of $dataset FAILED: ${e.getMessage}")
+        log.error(s"Fetching data for SOLR update of $dataset FAILED: ${ e.getMessage }")
         ""
     }
 }
