@@ -1,5 +1,5 @@
 easy-update-solr-index
-======================
+===========
 [![Build Status](https://travis-ci.org/DANS-KNAW/easy-update-solr-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-update-solr-index)
 
 Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.
@@ -45,20 +45,18 @@ ARGUMENTS
 INSTALLATION AND CONFIGURATION
 ------------------------------
 
-### Installation steps:
 
-1. Unzip the tarball to a directory of your choice, e.g. /opt/
+1. Unzip the tarball to a directory of your choice, typically `/usr/local/`
 2. A new directory called easy-update-solr-index-<version> will be created
-3. The directory from step 2 is used as value for the system property ``app.home``
-4. Add ``${app.home}/bin`` to your ``PATH`` environment variable
+3. Add the command script to your `PATH` environment variable by creating a symbolic link to it from a directory that is
+   on the path, e.g. 
+   
+        ln -s /usr/local/easy-update-solr-index-<version>/bin/easy-update-solr-index /usr/bin
 
 
-### Configuration
 
-Set defaults for the command line arguments in ``${app.home}/cfg/application.properties``.
-Omitted items fall bach to the documented defaults.
-
-Configure logging in ``${app.home}/cfg/logback.xml`` which is self explaining.
+General configuration settings can be set in `cfg/application.properties` and logging can be configured
+in `cfg/logback.xml`. The available settings are explained in comments in aforementioned files.
 
 
 BUILDING FROM SOURCE
@@ -68,7 +66,7 @@ Prerequisites:
 
 * Java 8 or higher
 * Maven 3.3.3 or higher
- 
+
 Steps:
 
         git clone https://github.com/DANS-KNAW/easy-update-solr-index.git
