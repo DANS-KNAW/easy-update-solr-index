@@ -44,7 +44,7 @@ object EasyUpdateSolrIndex {
 
     val propsFile = new File(System.getProperty("app.home", ""), "cfg/application.properties")
     val completedArgs = getDefaults(args, propsFile) ++ args
-    implicit val settings = Settings(new Conf(completedArgs))
+    implicit val settings: Settings = Settings(new CommandLineOptions(completedArgs.toArray))
 
     val files = settings.datasets.filter(s => new File(s).exists())
     val queries = settings.datasets.filter(s => s.startsWith("pid~"))
@@ -69,7 +69,7 @@ object EasyUpdateSolrIndex {
     }
     else {
       log.info(s"defaults from ${ propsFile.getAbsolutePath }")
-      filterDefaultOptions(new PropertiesConfiguration(propsFile), new Conf(), args)
+      filterDefaultOptions(new PropertiesConfiguration(propsFile), new CommandLineOptions(), args)
     }
   }
 

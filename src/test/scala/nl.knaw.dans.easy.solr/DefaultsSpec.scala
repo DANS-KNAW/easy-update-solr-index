@@ -21,6 +21,7 @@ import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
 import org.scalatest.{ FlatSpec, Matchers }
+import scala.collection.JavaConverters._
 
 class DefaultsSpec extends FlatSpec with Matchers {
 
@@ -39,10 +40,22 @@ class DefaultsSpec extends FlatSpec with Matchers {
   }
 
   private def TestConf(args: Array[String]) = {
-    new Conf(args) {
+    new CommandLineOptions(args) {
       // avoids System.exit() in case of invalid arguments or "--help"
       override def verify(): Unit = {}
     }
+  }
+
+  "distributed default properties" should "be valid options" in {
+    val clo = new CommandLineOptions(Array[String]()) {
+      // avoids System.exit() in case of invalid arguments or "--help"
+      override def verify(): Unit = {}
+    }
+    val optKeys = clo.builder.opts.map(opt => opt.name).toArray
+    val propKeys = new PropertiesConfiguration("src/main/assembly/dist/cfg/application.properties")
+      .getKeys.asScala.withFilter(key => key.startsWith("default."))
+
+    propKeys.foreach(key => optKeys should contain(key.replace("default.", "")))
   }
 
   "minimal command line" should "apply default values" in {
@@ -50,7 +63,8 @@ class DefaultsSpec extends FlatSpec with Matchers {
     val args = "easy-dataset:1".split(" ")
     val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    val conf = new Conf(completedArgs)
+    val conf = new CommandLineOptions(completedArgs.toArray)
+    conf.verify()
     conf.batchSize() shouldBe 100
     conf.timeout() shouldBe 1000
     conf.user() shouldBe "somebody"
@@ -61,7 +75,8 @@ class DefaultsSpec extends FlatSpec with Matchers {
     val args = "-b3 -u u --dataset-timeout 6 easy-dataset:1".split(" ")
     val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    val conf = new Conf(completedArgs)
+    val conf = new CommandLineOptions(completedArgs.toArray)
+    conf.verify()
     conf.batchSize() shouldBe 3
     conf.timeout() shouldBe 6
     conf.user() shouldBe "u"

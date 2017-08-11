@@ -20,7 +20,7 @@ import java.net.URL
 import com.yourmediashelf.fedora.client.FedoraCredentials
 
 object Settings {
-  def apply(conf: Conf): Settings = new Settings(
+  def apply(conf: CommandLineOptions): Settings = new Settings(
     batchSize = conf.batchSize.apply(),
     timeout = conf.timeout.apply(),
     testMode = conf.debug(),

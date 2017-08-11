@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.nio.file.{ Files, Path, Paths }
+import java.nio.file.{ Files, Paths }
 
 import org.apache.commons.configuration.PropertiesConfiguration
 import resource.managed
@@ -25,6 +25,7 @@ import scala.io.Source
 case class Configuration(version: String, properties: PropertiesConfiguration)
 
 object Configuration {
+  System.setProperty("app.home", "src/main/assembly/dist") // Use the default settings in this test
 
   def apply(): Configuration = {
     val home = Paths.get(System.getProperty("app.home"))

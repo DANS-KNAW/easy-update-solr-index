@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2017 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,26 @@
  */
 package nl.knaw.dans.easy.solr
 
-import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand, singleArgConverter}
+import java.net.URL
 
-class CommandLineOptions(args: Array[String], configuration: Configuration) extends ScallopConf(args) {
+import org.rogach.scallop.{ ScallopConf, ScallopOption }
+
+/**
+ * Creates a set of parsed and validated command line arguments.
+ *
+ * @param args The default is a minimal list that does not exit due to invalid arguments.
+ *             Though --version or --help would validate, Scallop will call System.exit(0).
+ *             Otherwise the default option values make no sense.
+ */
+class CommandLineOptions(args: Array[String]  = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" "),
+                         configuration: Configuration = Configuration()
+                        ) extends ScallopConf(args) {
+
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
   printedName = "easy-update-solr-index"
-  private val SUBCOMMAND_SEPARATOR = "---\n"
-  val description: String = s"""An example module generated with easy-module-archetype stripped down to only command line interface."""
-  val synopsis: String =
-    s"""
-       |  $printedName (synopsis of command line parameters)
-       |  $printedName (... possibly multiple lines for subcommands)""".stripMargin
+  val description = """Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository."""
+  val synopsis = s"""$printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ..."""
 
   version(s"$printedName v${ configuration.version }")
   banner(
@@ -39,7 +47,29 @@ class CommandLineOptions(args: Array[String], configuration: Configuration) exte
        |
        |Options:
        |""".stripMargin)
-  val url: ScallopOption[String] = opt("someOption", noshort = true, descr = "Description of the option")
+  val fedora: ScallopOption[URL] = opt[URL]("fcrepo-server", required = true, short = 'f',
+    descr = "URL of Fedora Commons Repository Server to connect to ")
+  val user: ScallopOption[String] = opt[String]("fcrepo-user", required = true, short = 'u',
+    descr = "User to connect to fcrepo-server")
+  val password: ScallopOption[String] = opt[String]("fcrepo-password", required = true, short = 'p',
+    descr = "Password for fcrepo-user")
+  val solr: ScallopOption[URL] = opt[URL]("solr-update-url", required = true, short = 's',
+    descr = "URL to POST SOLR documents to")
+  val debug: ScallopOption[Boolean] = opt[Boolean]("debug", default = Some(false), short = 'd',
+    descr = "If specified: only generate document(s), do not send anything to SOLR")
+  val output: ScallopOption[Boolean] = opt[Boolean]("output", default = Some(false), short = 'o',
+    descr = "If provided: output SOLR document(s) to stdout")
+  val batchSize: ScallopOption[Int] = opt[Int]("dataset-batch-size", required = true, short = 'b',
+    descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting datasets with a query")
+  val timeout: ScallopOption[Int] = opt[Int]("dataset-timeout", required = true, short = 't',
+    descr = "Milliseconds to pause after processing a batch of datasets " +
+      "to avoid reducing performance of the production system too much")
+
+  val datasets: ScallopOption[List[String]] = trailArg[List[String]]("dataset-ids",
+    descr = "One or more of: dataset id (for example 'easy-dataset:1'), " +
+      "a file with a dataset id per line or " +
+      "a fedora query that selects datasets (for example 'pid~easy-dataset:*', " +
+      "see also help for 'specific fields' on <fcrepo-server>/objects) ")
 
   footer("")
 }
