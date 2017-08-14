@@ -25,8 +25,6 @@ import scala.io.Source
 case class Configuration(version: String, properties: PropertiesConfiguration)
 
 object Configuration {
-  System.setProperty("app.home", "src/main/assembly/dist") // Use the default settings in this test
-
   def apply(): Configuration = {
     val home = Paths.get(System.getProperty("app.home"))
     val cfgPath = Seq(

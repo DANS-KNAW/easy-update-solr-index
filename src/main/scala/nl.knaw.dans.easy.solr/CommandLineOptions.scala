@@ -26,7 +26,7 @@ import org.rogach.scallop.{ ScallopConf, ScallopOption }
  *             Though --version or --help would validate, Scallop will call System.exit(0).
  *             Otherwise the default option values make no sense.
  */
-class CommandLineOptions(args: Array[String]  = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" "),
+class CommandLineOptions(args: Array[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" "),
                          configuration: Configuration = Configuration()
                         ) extends ScallopConf(args) {
 

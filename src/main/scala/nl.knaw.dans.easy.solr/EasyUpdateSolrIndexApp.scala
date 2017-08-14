@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr
 
-import scala.util.{ Try, Success }
+import scala.util.{ Success, Try }
 
 class EasyUpdateSolrIndexApp(wiring: ApplicationWiring) extends AutoCloseable {
 
