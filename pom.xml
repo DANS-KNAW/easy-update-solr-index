@@ -173,12 +173,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                        <configuration>
-                            <group>Applications/Archiving</group>
-                            <requires combine.children="append">
-                                <require>jsvc</require>
-                            </requires>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
