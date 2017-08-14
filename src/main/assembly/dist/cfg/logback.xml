@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%date{ISO8601}] %-5level %msg %n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${user.home}/easy-update-solr-index.log</file>
@@ -8,11 +14,11 @@
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>[%thread] %-5level %logger{15} - %msg%n</pattern>
+            <pattern>[%date{ISO8601}] %-5level %msg%n</pattern>
         </encoder>
     </appender>
     <root level="warn">
-        <appender-ref ref="FILE" />
+        <appender-ref ref="FILE"/>
     </root>
-    <logger name="nl.knaw.dans.easy" level="info" />
+    <logger name="nl.knaw.dans.easy" level="info"/>
 </configuration>

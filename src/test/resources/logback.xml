@@ -7,12 +7,11 @@
     </appender>
 
     <!-- No logging during the build -->
-    <root level="off" >
-        <appender-ref ref="STDOUT" />
+    <root level="off">
+        <appender-ref ref="STDOUT"/>
     </root>
 
-    <!-- Set log level during test with system property, e.g., mvn test -DLOG_LEVEL=debug -->
-    <logger name="nl.knaw.dans.easy" level="${LOG_LEVEL:-off}" />
-    <logger name="org.scalatest" level="info" />
+    <logger name="nl.knaw.dans.easy" level="${LOG_LEVEL:-off}"/>
+    <logger name="org.scalatest" level="info"/>
 
 </configuration>
