@@ -57,14 +57,14 @@ object Command extends App with DebugEnhancedLogging {
     .acquireAndGet(app => {
       for {
         _ <- app.init()
-        msg <- runCommand(app)
+        msg <- run(app)
       } yield msg
     })
     .doIfSuccess(msg => println(s"OK: $msg"))
     .doIfFailure { case e => logger.error(e.getMessage, e) }
     .doIfFailure { case NonFatal(e) => println(s"FAILED: ${ e.getMessage }") }
 
-  private def runCommand(app: EasyUpdateSolrIndexApp): Try[FeedBackMessage] = {
+  private def run(app: EasyUpdateSolrIndexApp): Try[FeedBackMessage] = {
 
     implicit val settings: Settings = Settings(commandLine)
     val files = settings.datasets.filter(s => new File(s).exists())
