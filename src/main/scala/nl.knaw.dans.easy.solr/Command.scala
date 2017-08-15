@@ -19,7 +19,6 @@ import java.io.{ File, FileInputStream }
 import java.lang.Thread.sleep
 
 import com.yourmediashelf.fedora.client.FedoraClient.findObjects
-import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.IOUtils.readLines
@@ -37,18 +36,7 @@ object Command extends App with DebugEnhancedLogging {
 
   val configuration = Configuration()
 
-  private val allArgs = {
-    val neededDefaults = filterDefaultOptions(
-      configuration.properties,
-      new CommandLineOptions() {
-        verify()
-      },
-      args
-    )
-    (neededDefaults ++ args).toArray
-  }
-
-  val commandLine: CommandLineOptions = new CommandLineOptions(allArgs, configuration) {
+  val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration) {
     verify()
   }
   val app = new EasyUpdateSolrIndexApp(new ApplicationWiring(configuration))

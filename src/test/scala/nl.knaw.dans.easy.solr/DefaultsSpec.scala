@@ -17,10 +17,10 @@ package nl.knaw.dans.easy.solr
 
 import java.io.File
 
-import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
 import org.scalatest.{ FlatSpec, Matchers }
+
 import scala.collection.JavaConverters._
 
 class DefaultsSpec extends FlatSpec with Matchers {
@@ -61,21 +61,19 @@ class DefaultsSpec extends FlatSpec with Matchers {
   "minimal command line" should "apply default values" in {
 
     val args = "easy-dataset:1".split(" ")
-    val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    val conf = new CommandLineOptions(completedArgs.toArray)
+    val conf = new CommandLineOptions(args)
     conf.verify()
     conf.batchSize() shouldBe 100
     conf.timeout() shouldBe 1000
-    conf.user() shouldBe "somebody"
+    conf.user() shouldBe "fedoraAdmin"
   }
 
   "command line values" should "have precedence over default values" in {
 
     val args = "-b3 -u u --dataset-timeout 6 easy-dataset:1".split(" ")
-    val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    val conf = new CommandLineOptions(completedArgs.toArray)
+    val conf = new CommandLineOptions(args)
     conf.verify()
     conf.batchSize() shouldBe 3
     conf.timeout() shouldBe 6

@@ -23,15 +23,17 @@ ARGUMENTS
 ---------
 
      -b, --dataset-batch-size  <arg>   Number of datasets to update at once, maximized by fedora to 100 when
-                                       selecting datasets with a query
+                                       selecting datasets with a query (default = 100)
      -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a batch of datasets to avoid
-                                       reducing performance of the production system too much
+                                       reducing performance of the production system too much (default = 1000)
      -d, --debug                       If specified: only generate document(s), do not send anything to SOLR
-     -p, --fcrepo-password  <arg>      Password for fcrepo-user
+     -p, --fcrepo-password  <arg>      Password for fcrepo-user (default = fedoraAdmin)
      -f, --fcrepo-server  <arg>        URL of Fedora Commons Repository Server to connect to
-     -u, --fcrepo-user  <arg>          User to connect to fcrepo-server
+                                       (default = http://localhost:8080/fedora)
+     -u, --fcrepo-user  <arg>          User to connect to fcrepo-server (default = fedoraAdmin)
      -o, --output                      If provided: output SOLR document(s) to stdout
      -s, --solr-update-url  <arg>      URL to POST SOLR documents to
+                                       (default = http://localhost:8080/solr/datasets/update)
          --help                        Show help message
          --version                     Show version of this program
    
@@ -40,6 +42,7 @@ ARGUMENTS
                               per line or a fedora query that selects datasets (for example 'pid~easy-dataset:*',
                               see also help for 'specific fields' on <fcrepo-server>/objects)
 
+Note that the actual defaults (shown with `--help`) depend on the actual configuration.
 
 
 INSTALLATION AND CONFIGURATION

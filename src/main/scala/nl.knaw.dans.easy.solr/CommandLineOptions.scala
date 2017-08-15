@@ -47,21 +47,45 @@ class CommandLineOptions(args: Array[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 
        |
        |Options:
        |""".stripMargin)
-  val fedora: ScallopOption[URL] = opt[URL]("fcrepo-server", required = true, short = 'f',
+  val fedora: ScallopOption[URL] = opt[URL](
+    "fcrepo-server",
+    default = Some(new URL(configuration.properties.getString("default.fcrepo-server"))),
+    short = 'f',
     descr = "URL of Fedora Commons Repository Server to connect to ")
-  val user: ScallopOption[String] = opt[String]("fcrepo-user", required = true, short = 'u',
+  val user: ScallopOption[String] = opt[String](
+    "fcrepo-user",
+    default = Some(configuration.properties.getString("default.fcrepo-user")),
+    short = 'u',
     descr = "User to connect to fcrepo-server")
-  val password: ScallopOption[String] = opt[String]("fcrepo-password", required = true, short = 'p',
+  val password: ScallopOption[String] = opt[String](
+    "fcrepo-password",
+    default = Some(configuration.properties.getString("default.fcrepo-password")),
+    short = 'p',
     descr = "Password for fcrepo-user")
-  val solr: ScallopOption[URL] = opt[URL]("solr-update-url", required = true, short = 's',
+  val solr: ScallopOption[URL] = opt[URL](
+    "solr-update-url",
+    default = Some(new URL(configuration.properties.getString("default.solr-update-url"))),
+    short = 's',
     descr = "URL to POST SOLR documents to")
-  val debug: ScallopOption[Boolean] = opt[Boolean]("debug", default = Some(false), short = 'd',
+  val debug: ScallopOption[Boolean] = opt[Boolean](
+    "debug",
+    default = Some(false),
+    short = 'd',
     descr = "If specified: only generate document(s), do not send anything to SOLR")
-  val output: ScallopOption[Boolean] = opt[Boolean]("output", default = Some(false), short = 'o',
+  val output: ScallopOption[Boolean] = opt[Boolean](
+    "output",
+    default = Some(false),
+    short = 'o',
     descr = "If provided: output SOLR document(s) to stdout")
-  val batchSize: ScallopOption[Int] = opt[Int]("dataset-batch-size", required = true, short = 'b',
+  val batchSize: ScallopOption[Int] = opt[Int](
+    "dataset-batch-size",
+    default = Some(configuration.properties.getInt("default.dataset-batch-size")),
+    short = 'b',
     descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting datasets with a query")
-  val timeout: ScallopOption[Int] = opt[Int]("dataset-timeout", required = true, short = 't',
+  val timeout: ScallopOption[Int] = opt[Int](
+    "dataset-timeout",
+    default = Some(configuration.properties.getInt("default.dataset-timeout")),
+    short = 't',
     descr = "Milliseconds to pause after processing a batch of datasets " +
       "to avoid reducing performance of the production system too much")
 
