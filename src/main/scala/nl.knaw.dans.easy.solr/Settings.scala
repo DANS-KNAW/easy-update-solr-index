@@ -54,5 +54,4 @@ case class Settings(batchSize: Int = 100,
                     output: Boolean = false,
                     datasets: List[String] = List(),
                     solr: SolrProvider,
-                    fedora: FedoraProvider) {
-}
+                    fedora: FedoraProvider)
