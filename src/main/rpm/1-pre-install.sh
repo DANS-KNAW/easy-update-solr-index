@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
@@ -14,18 +15,14 @@
 # limitations under the License.
 #
 
-- hosts: "test"
-  become: yes
-  vars:
-    local_test_vm_install_httpd: no
-  roles:
-    - dans.local-test-vm-base
-    - dans.local-yum-repo
 
-- hosts: "test"
-  become: yes
-  tasks:
-    - name: Installing package
-      yum:
-        name: dans.knaw.nl-easy-update-solr-index
-        state: latest
+#include <service.sh>
+
+NUMBER_OF_INSTALLATIONS=$1
+MODULE_NAME=easy-update-solr-index
+PHASE="PRE-INSTALL"
+
+#echo "$PHASE: START (Number of current installations: $NUMBER_OF_INSTALLATIONS)"
+#service_stop $MODULE_NAME $NUMBER_OF_INSTALLATIONS
+#service_create_module_user $MODULE_NAME
+#echo "$PHASE: DONE"
