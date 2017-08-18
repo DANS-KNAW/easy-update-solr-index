@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,8 @@
  */
 package nl.knaw.dans.easy.solr
 
-import org.joda.time.{DateTime, DateTimeZone}
-import org.slf4j.{Logger, LoggerFactory}
+import org.joda.time.{ DateTime, DateTimeZone }
+import org.slf4j.{ Logger, LoggerFactory }
 
 import scala.collection.immutable.Seq
 import scala.xml._
@@ -26,10 +26,10 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
   val EAS_NAMESPACE: String = "http://easy.dans.knaw.nl/easy/easymetadata/eas/"
   val RDF_NAMESPACE: String = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
-  val emd = XML.loadString(fedora.getEmd(pid))
-  val amd = XML.loadString(fedora.getAmd(pid))
-  val prsl = XML.loadString(fedora.getPrsql(pid))
-  val relsExt = XML.loadString(fedora.getRelsExt(pid))
+  val emd: Elem = XML.loadString(fedora.getEmd(pid))
+  val amd: Elem = XML.loadString(fedora.getAmd(pid))
+  val prsl: Elem = XML.loadString(fedora.getPrsql(pid))
+  val relsExt: Elem = XML.loadString(fedora.getRelsExt(pid))
 
   /* dc */
 
@@ -39,11 +39,11 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     s"dc_$name" -> (emd \ name \ "_").map(f)
   }
 
-  val dcTitleFromEmdMapping@(dcTitleKey, dcTitleValues) = extractMappingFromEmd("title")(_.text)
+  val dcTitleFromEmdMapping @ (dcTitleKey, dcTitleValues) = extractMappingFromEmd("title")(_.text)
 
-  val dcPublisherFromEmdMapping@(dcPublisherKey, dcPublisherValues) = extractMappingFromEmd("publisher")(_.text)
+  val dcPublisherFromEmdMapping @ (dcPublisherKey, dcPublisherValues) = extractMappingFromEmd("publisher")(_.text)
 
-  def extractPersonOrganizationForDc(p: Node) = {
+  def extractPersonOrganizationForDc(p: Node): String = {
     // formatting the person's name
     val nameStart = (p \ "surname").text
     val nameEnd = List("title", "initials", "prefix").map(s => (p \ s).text).filter(_.nonEmpty).mkString(" ")
@@ -55,27 +55,27 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     else org
   }
 
-  val dcCreatorFromEmdMapping@(dcCreatorKey, dcCreatorValues) = extractMappingFromEmd("creator")(n => {
+  val dcCreatorFromEmdMapping @ (dcCreatorKey, dcCreatorValues) = extractMappingFromEmd("creator")(n => {
     if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
     else n.text
   })
 
-  val dcContributorFromEmdMapping@(dcContributorKey, dcContributorValues) = extractMappingFromEmd("contributor")(n => {
+  val dcContributorFromEmdMapping @ (dcContributorKey, dcContributorValues) = extractMappingFromEmd("contributor")(n => {
     if (n.namespace == EAS_NAMESPACE) extractPersonOrganizationForDc(n)
     else n.text
   })
 
   /* without sort fields */
 
-  val dcOtherFromEmdMappings = List("description", "subject", "type", "format", "identifier", "source", "language", "rights")
+  val dcOtherFromEmdMappings: List[(String, Seq[String])] = List("description", "subject", "type", "format", "identifier", "source", "language", "rights")
     .map(s => extractMappingFromEmd(s)(_.text))
 
-  val dcDateFromEmdMapping = extractMappingFromEmd("date")(n => {
+  val dcDateFromEmdMapping: (String, Seq[String]) = extractMappingFromEmd("date")(n => {
     if (isFormattableDate(n)) IsoDate.format(n.text, getPrecision(n))
     else n.text
   })
 
-  def extractRelationForDc(relation: Node) = {
+  def extractRelationForDc(relation: Node): String = {
     ((relation \\ "subject-title").text, (relation \\ "subject-link").text) match {
       case (title, "") => s"title=$title"
       case ("", uri) => s"URI=$uri"
@@ -83,21 +83,21 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
   }
 
-  val dcRelationFromEmdMapping = extractMappingFromEmd("relation")(n => {
+  val dcRelationFromEmdMapping: (String, Seq[String]) = extractMappingFromEmd("relation")(n => {
     if (n.namespace == EAS_NAMESPACE) extractRelationForDc(n)
     else n.text
   })
 
-  def extractPointForDc(point: Node) = {
-    s"scheme=${point.attribute(EAS_NAMESPACE, "scheme").get} x=${(point \ "x").text} y=${(point \ "y").text}"
+  def extractPointForDc(point: Node): String = {
+    s"scheme=${ point.attribute(EAS_NAMESPACE, "scheme").get } x=${ (point \ "x").text } y=${ (point \ "y").text }"
   }
 
-  def extractBoxForDc(box: Node) = {
-    val coordinates = List("north", "east", "south", "west").map(cn => s"$cn=${(box \ cn).text}").mkString(" ")
-    s"scheme=${box.attribute(EAS_NAMESPACE, "scheme").get} $coordinates"
+  def extractBoxForDc(box: Node): String = {
+    val coordinates = List("north", "east", "south", "west").map(cn => s"$cn=${ (box \ cn).text }").mkString(" ")
+    s"scheme=${ box.attribute(EAS_NAMESPACE, "scheme").get } $coordinates"
   }
 
-  def extractSpatialForDc(spatial: Node) = {
+  def extractSpatialForDc(spatial: Node): String = {
     (spatial \ "point", spatial \ "box") match {
       case (Seq(), Seq()) => spatial.text
       case (pointSeq, Seq()) => extractPointForDc(pointSeq.head)
@@ -105,14 +105,14 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     }
   }
 
-  val dcCoverageFromEmdMapping = extractMappingFromEmd("coverage")(n => {
+  val dcCoverageFromEmdMapping: (String, Seq[String]) = extractMappingFromEmd("coverage")(n => {
     if (n.label == "spatial") extractSpatialForDc(n)
     else n.text
   })
 
   /* combine */
 
-  val dcMappings = dcTitleFromEmdMapping ::
+  val dcMappings: List[(String, Seq[String])] = dcTitleFromEmdMapping ::
     dcPublisherFromEmdMapping ::
     dcCreatorFromEmdMapping ::
     dcContributorFromEmdMapping ::
@@ -121,30 +121,31 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     dcCoverageFromEmdMapping ::
     dcOtherFromEmdMappings
 
-  val dcMappingsSort = (s"${dcCreatorKey}_s" -> dcCreatorValues) ::
-    (s"${dcContributorKey}_s" -> dcContributorValues) ::
-    (s"${dcTitleKey}_s" -> dcTitleValues) ::
-    (s"${dcPublisherKey}_s" -> dcPublisherValues) ::
+  val dcMappingsSort: List[(String, Seq[String])] = (s"${ dcCreatorKey }_s" -> dcCreatorValues) ::
+    (s"${ dcContributorKey }_s" -> dcContributorValues) ::
+    (s"${ dcTitleKey }_s" -> dcTitleValues) ::
+    (s"${ dcPublisherKey }_s" -> dcPublisherValues) ::
     Nil
 
   /* emd */
 
-  val emdDateMappings = List("created", "available", "submitted", "published", "deleted")
-    .map(s => s"emd_date_${s}" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
+  val emdDateMappings: List[(String, Seq[String])] = List("created", "available", "submitted", "published", "deleted")
+    .map(s => s"emd_date_$s" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
 
-  def getEasDateElement(typeOfDate: String) = {
+  def getEasDateElement(typeOfDate: String): NodeSeq = {
     val elements = (emd \ "date" \ typeOfDate).filter(_.namespace == EAS_NAMESPACE)
-    if(elements.size > 1) {
-      log.warn(s"Found ${elements.size} date $typeOfDate elements but only one should be allowed. Metadata may be wrong! Using the first element found.")
-      NodeSeq.fromSeq(elements.head.toSeq)
-    } else elements
+    if (elements.size > 1) {
+      log.warn(s"Found ${ elements.size } date $typeOfDate elements but only one should be allowed. Metadata may be wrong! Using the first element found.")
+      NodeSeq.fromSeq(elements.head)
+    }
+    else elements
   }
 
   def toUtcTimestamp(s: String): String =
     DateTime.parse(s).withZone(DateTimeZone.UTC).toString
 
-  val emdFormattedDateMappings = List("created", "available")
-    .map(s => s"emd_date_${s}_formatted" -> getEasDateElement(s).filter(isFormattableDate).map(n => IsoDate.format(n.text, getPrecision(n))))
+  val emdFormattedDateMappings: List[(String, Seq[String])] = List("created", "available")
+    .map(s => s"emd_date_${ s }_formatted" -> getEasDateElement(s).filter(isFormattableDate).map(n => IsoDate.format(n.text, getPrecision(n))))
 
   def isFormattableDate(n: Node): Boolean =
     (n.attribute(EAS_NAMESPACE, "format"), n.attribute(EAS_NAMESPACE, "scheme")) match {
@@ -177,7 +178,7 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
         }))
 
   def isRequiredAndCompletedStep(n: Node): Boolean = {
-    val required =  n \ "required"
+    val required = n \ "required"
     val completed = n \ "completed"
     List(required, completed).forall(p => p.nonEmpty && p.text == "true")
   }
@@ -223,7 +224,7 @@ class SolrDocumentGenerator(fedora: FedoraProvider, pid: String, log: Logger = L
     values.map(value => <field name={name}>{value}</field>)
 
   def createSortField(name: String, values: Seq[String]): NodeSeq =
-    if(values.isEmpty) NodeSeq.Empty
+    if (values.isEmpty) NodeSeq.Empty
     else <field name={name}>{values.mkString(" ")}</field>
 
 }

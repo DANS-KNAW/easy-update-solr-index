@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,18 +18,19 @@ package nl.knaw.dans.easy.solr
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
 import org.slf4j.Logger
+
 import scala.xml._
 
 class SolrDocumentGeneratorSpec extends FlatSpec
-    with Matchers
-    with Inside
-    with MockFactory
-    with OneInstancePerTest {
+  with Matchers
+  with Inside
+  with MockFactory
+  with OneInstancePerTest {
   /*
    * Mocking and helper functions.
    */
-  val fedora = mock[FedoraProvider]
-  val log = mock[Logger]
+  val fedora: FedoraProvider = mock[FedoraProvider]
+  val log: Logger = mock[Logger]
 
   private def expectEmptyXmlByDefault = {
     expectDc(<dc/>)
@@ -40,10 +41,15 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   }
 
   private def expectDc(xml: Elem) = fedora.getDc _ expects * anyNumberOfTimes() returning xml.toString
+
   private def expectEmd(xml: Elem) = fedora.getEmd _ expects * anyNumberOfTimes() returning xml.toString
+
   private def expectAmd(xml: Elem) = fedora.getAmd _ expects * anyNumberOfTimes() returning xml.toString
+
   private def expectPrsl(xml: Elem) = fedora.getPrsql _ expects * anyNumberOfTimes() returning xml.toString
+
   private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning xml.toString
+
   private def expectWarningLogged() = (log.warn(_: String)) expects * atLeastOnce()
 
   private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] =
@@ -248,7 +254,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   }
 
   "dc_coverage" should "contain point and box coordinates when available" in {
-  expectEmd(
+    expectEmd(
     <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
       <emd:coverage>
         <dct:spatial>spatial1</dct:spatial>
@@ -309,9 +315,9 @@ class SolrDocumentGeneratorSpec extends FlatSpec
            <dc:subject>some other subject</dc:subject>
          </emd:subject>
       </easymetadata>)
-      expectEmptyXmlByDefault
+    expectEmptyXmlByDefault
     val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val archSubjects= (docRoot \\ "field").filter(f => (f \ "@name").text == "archaeology_dc_subject").map(_.text)
+    val archSubjects = (docRoot \\ "field").filter(f => (f \ "@name").text == "archaeology_dc_subject").map(_.text)
 
     archSubjects should contain("ELCF")
     archSubjects shouldNot contain("some other subject")
@@ -335,21 +341,21 @@ class SolrDocumentGeneratorSpec extends FlatSpec
   }
 
   "dai_creator" should "get value from entityId field with scheme DAI in eas:creator" in {
-      val CREATOR_DAI = "123456789"
-      expectEmd(
-        <easymetadata
-        xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-          <emd:creator>
-            <eas:creator>
-              <eas:entityId scheme="DAI">{CREATOR_DAI}</eas:entityId>
-            </eas:creator>
-          </emd:creator>
-        </easymetadata>)
-      expectEmptyXmlByDefault
-      val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-      val daiCreators = getSolrDocFieldValues(docRoot, "dai_creator")
+    val CREATOR_DAI = "123456789"
+    expectEmd(
+      <easymetadata
+      xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:creator>
+          <eas:creator>
+            <eas:entityId scheme="DAI">{CREATOR_DAI}</eas:entityId>
+          </eas:creator>
+        </emd:creator>
+      </easymetadata>)
+    expectEmptyXmlByDefault
+    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+    val daiCreators = getSolrDocFieldValues(docRoot, "dai_creator")
 
-      daiCreators should contain(CREATOR_DAI)
+    daiCreators should contain(CREATOR_DAI)
   }
 
   "dai_contributor" should "get value from entityId field with scheme DAI in eas:contributor" in {

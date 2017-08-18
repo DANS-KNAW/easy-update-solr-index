@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,11 @@ package nl.knaw.dans.easy.solr
 
 import java.io.File
 
-import nl.knaw.dans.easy.solr.Defaults.filterDefaultOptions
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.FileUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
+
+import scala.collection.JavaConverters._
 
 class DefaultsSpec extends FlatSpec with Matchers {
 
@@ -39,29 +40,41 @@ class DefaultsSpec extends FlatSpec with Matchers {
   }
 
   private def TestConf(args: Array[String]) = {
-    new Conf(args) {
+    new CommandLineOptions(args) {
       // avoids System.exit() in case of invalid arguments or "--help"
       override def verify(): Unit = {}
     }
   }
 
+  "distributed default properties" should "be valid options" in {
+    val clo = new CommandLineOptions(Array[String]()) {
+      // avoids System.exit() in case of invalid arguments or "--help"
+      override def verify(): Unit = {}
+    }
+    val optKeys = clo.builder.opts.map(opt => opt.name).toArray
+    val propKeys = new PropertiesConfiguration("src/main/assembly/dist/cfg/application.properties")
+      .getKeys.asScala.withFilter(key => key.startsWith("default."))
+
+    propKeys.foreach(key => optKeys should contain(key.replace("default.", "")))
+  }
+
   "minimal command line" should "apply default values" in {
 
     val args = "easy-dataset:1".split(" ")
-    val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    val conf = new Conf(completedArgs)
+    val conf = new CommandLineOptions(args)
+    conf.verify()
     conf.batchSize() shouldBe 100
     conf.timeout() shouldBe 1000
-    conf.user() shouldBe "somebody"
+    conf.user() shouldBe "fedoraAdmin"
   }
 
   "command line values" should "have precedence over default values" in {
 
     val args = "-b3 -u u --dataset-timeout 6 easy-dataset:1".split(" ")
-    val completedArgs = filterDefaultOptions(props, TestConf(args), args) ++ args
 
-    val conf = new Conf(completedArgs)
+    val conf = new CommandLineOptions(args)
+    conf.verify()
     conf.batchSize() shouldBe 3
     conf.timeout() shouldBe 6
     conf.user() shouldBe "u"

@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <Pattern>[%-5level] %msg %n</Pattern>
+            <pattern>%-5level %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="error">
-        <appender-ref ref="CONSOLE" />
+
+    <!-- No logging during the build -->
+    <root level="off">
+        <appender-ref ref="STDOUT"/>
     </root>
+
+    <logger name="nl.knaw.dans.easy" level="${LOG_LEVEL:-off}"/>
+    <logger name="org.scalatest" level="info"/>
+
 </configuration>

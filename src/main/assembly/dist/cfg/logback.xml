@@ -1,30 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <configuration>
-    <property name="PROGRAM" value="easy-update-solr-index" />
-    <property name="LOGDIR" value="/var/log/${PROGRAM}" />
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <Pattern>[%-5level] %msg %n</Pattern>
+            <pattern>[%date{ISO8601}] %-5level %msg %n</pattern>
         </encoder>
     </appender>
+
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGDIR}/${PROGRAM}.log</file>
+        <file>${user.home}/easy-update-solr-index.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover -->
-            <fileNamePattern>${LOGDIR}/${PROGRAM}.%d{yyyy-MM-dd}.log</fileNamePattern>
-
-            <!-- keep 30 days' worth of history -->
+            <fileNamePattern>${user.home}/easy-update-solr-index.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%p %d [%t] - %m%n</pattern>
+            <pattern>[%date{ISO8601}] %-5level %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="error">
-        <appender-ref ref="CONSOLE" />
+    <root level="warn">
+        <appender-ref ref="FILE"/>
     </root>
-    <logger name="nl.knaw.dans.easy.solr" level="info">
-        <appender-ref ref="FILE" />
-    </logger>
+    <logger name="nl.knaw.dans.easy" level="info"/>
 </configuration>

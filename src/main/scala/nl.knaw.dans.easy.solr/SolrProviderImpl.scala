@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,17 @@
  */
 package nl.knaw.dans.easy.solr
 
-object Version {
-  def apply(): String = {
-    val props = new java.util.Properties()
-    props.load(Version.getClass.getResourceAsStream("/Version.properties"))
-    props.getProperty("application.version")
+import java.net.URL
+
+import scala.util.Try
+import scalaj.http.Http
+
+case class SolrProviderImpl(solrUrl: URL) extends SolrProvider {
+  override def update(doc: String): Try[Unit] = Try {
+    val result = Http(solrUrl.toString)
+      .header("Content-Type", "application/xml; charset=utf-8")
+      .param("commit", "true").postData(doc.getBytes("UTF-8"))
+      .asString
+    if (result.isError) throw new RuntimeException(s"${ result.statusLine }, details: ${ result.body }")
   }
 }

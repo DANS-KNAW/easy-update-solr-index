@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,19 +20,19 @@ import java.net.URL
 import com.yourmediashelf.fedora.client.FedoraCredentials
 
 object Settings {
-  def apply(conf: Conf): Settings = new Settings(
+  def apply(conf: CommandLineOptions): Settings = new Settings(
     batchSize = conf.batchSize.apply(),
     timeout = conf.timeout.apply(),
     testMode = conf.debug(),
     output = conf.output(),
     datasets = conf.datasets.apply(),
-    solr = new SolrProviderImpl(conf.solr()),
-    fedora = new FedoraProviderImpl(
+    solr = SolrProviderImpl(conf.solr()),
+    fedora = FedoraProviderImpl(
       new FedoraCredentials(
         conf.fedora(),
         conf.user(),
         conf.password()
-      ) {override def toString = s"FedoraCredentials (${conf.fedora()}, ${conf.user()}, ...)"}
+      ) {override def toString = s"FedoraCredentials (${ conf.fedora() }, ${ conf.user() }, ...)" }
     )
   )
 
@@ -40,11 +40,11 @@ object Settings {
   def apply(fedoraCredentials: FedoraCredentials,
             dataset: String,
             solr: URL
-             ):Settings = new Settings(
+           ): Settings = new Settings(
     testMode = false,
     datasets = List(dataset),
-    solr = new SolrProviderImpl(solr),
-    fedora = new FedoraProviderImpl(fedoraCredentials)
+    solr = SolrProviderImpl(solr),
+    fedora = FedoraProviderImpl(fedoraCredentials)
   )
 }
 
@@ -54,5 +54,4 @@ case class Settings(batchSize: Int = 100,
                     output: Boolean = false,
                     datasets: List[String] = List(),
                     solr: SolrProvider,
-                    fedora: FedoraProvider) {
-}
+                    fedora: FedoraProvider)

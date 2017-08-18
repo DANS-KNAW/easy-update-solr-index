@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,14 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.{ ByteArrayOutputStream, File }
 
-import nl.knaw.dans.easy.solr.CustomMatchers._
-import org.apache.commons.configuration.PropertiesConfiguration
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest._
 
-import scala.collection.JavaConverters._
+class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
+  System.setProperty("app.home", "src/main/assembly/dist") // Use the default settings in this test
 
-class ConfSpec extends FlatSpec with Matchers {
-
-  private val clo = new Conf(Array[String]()) {
+  private val clo = new CommandLineOptions(Array[String](), Configuration()) {
     // avoids System.exit() in case of invalid arguments or "--help"
     override def verify(): Unit = {}
   }
@@ -52,13 +49,5 @@ class ConfSpec extends FlatSpec with Matchers {
   "description line(s) in help info" should "be part of README.md and pom.xml" in {
     new File("README.md") should containTrimmed(clo.description)
     new File("pom.xml") should containTrimmed(clo.description)
-  }
-
-  "distributed default properties" should "be valid options" in {
-    val optKeys = clo.builder.opts.map(opt => opt.name).toArray
-    val propKeys = new PropertiesConfiguration("src/main/assembly/dist/cfg/application.properties")
-      .getKeys.asScala.withFilter(key => key.startsWith("default.") )
-
-    propKeys.foreach(key => optKeys should contain (key.replace("default.","")) )
   }
 }
