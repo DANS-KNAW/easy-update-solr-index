@@ -34,7 +34,7 @@
     <inceptionYear>2015</inceptionYear>
 
     <properties>
-        <main-class>nl.knaw.dans.easy.solr.EasyUpdateSolrIndex</main-class>
+        <main-class>nl.knaw.dans.easy.solr.Command</main-class>
     </properties>
 
     <scm>
