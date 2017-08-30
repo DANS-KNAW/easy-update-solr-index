@@ -13,5 +13,4 @@
 
     <logger name="nl.knaw.dans.easy" level="${LOG_LEVEL:-off}"/>
     <logger name="org.scalatest" level="info"/>
-
 </configuration>

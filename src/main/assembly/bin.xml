@@ -44,6 +44,15 @@
             <fileMode>0755</fileMode>
         </fileSet>
         <fileSet>
+            <directory>${project.basedir}/src/main/assembly/dist/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>version</include>
+            </includes>
+            <fileMode>0444</fileMode>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/src/main/assembly/dist</directory>
             <outputDirectory/>
             <excludes>
