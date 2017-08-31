@@ -30,7 +30,7 @@ ARGUMENTS
      -o, --output                      If provided: output SOLR document(s) to stdout
          --help                        Show help message
          --version                     Show version of this program
-    
+
     trailing arguments:
      dataset-ids (required)   One or more of: dataset id (for example 'easy-dataset:1'), a file with a dataset id
                               per line or a fedora query that selects datasets (for example 'pid~easy-dataset:*',
