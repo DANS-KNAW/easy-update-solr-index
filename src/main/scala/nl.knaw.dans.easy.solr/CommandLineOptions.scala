@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.net.URL
-
 import org.rogach.scallop.{ ScallopConf, ScallopOption }
 
 /**
@@ -26,20 +24,18 @@ import org.rogach.scallop.{ ScallopConf, ScallopOption }
  *             Though --version or --help would validate, Scallop will call System.exit(0).
  *             Otherwise the default option values make no sense.
  */
-class CommandLineOptions(args: Array[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 id".split(" "),
-                         configuration: Configuration = Configuration()
-                        ) extends ScallopConf(args) {
+class CommandLineOptions(args: Seq[String], configuration: Configuration) extends ScallopConf(args) {
 
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
-  printedName = "easy-update-solr-index"
-  val description = """Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository."""
-  val synopsis = s"""$printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ..."""
 
-  version(s"$printedName v${ configuration.version }")
+  printedName = "easy-update-solr-index"
+  version(s"$printedName ${ configuration.version }")
+  val description = "Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository."
+  val synopsis = s"""$printedName [<option>...] [ <dataset-id> | <fcrepo-query> | <text-file> ] ..."""
   banner(
     s"""
-       |  $description
+       |$description
        |
        |Usage:
        |
@@ -47,53 +43,26 @@ class CommandLineOptions(args: Array[String] = "-fhttp: -uu -pp -shttp: -b1 -t0 
        |
        |Options:
        |""".stripMargin)
-  val fedora: ScallopOption[URL] = opt[URL](
-    "fcrepo-server",
-    default = Some(new URL(configuration.properties.getString("default.fcrepo-server"))),
-    short = 'f',
-    descr = "URL of Fedora Commons Repository Server to connect to ")
-  val user: ScallopOption[String] = opt[String](
-    "fcrepo-user",
-    default = Some(configuration.properties.getString("default.fcrepo-user")),
-    short = 'u',
-    descr = "User to connect to fcrepo-server")
-  val password: ScallopOption[String] = opt[String](
-    "fcrepo-password",
-    default = Some(configuration.properties.getString("default.fcrepo-password")),
-    short = 'p',
-    descr = "Password for fcrepo-user")
-  val solr: ScallopOption[URL] = opt[URL](
-    "solr-update-url",
-    default = Some(new URL(configuration.properties.getString("default.solr-update-url"))),
-    short = 's',
-    descr = "URL to POST SOLR documents to")
-  val debug: ScallopOption[Boolean] = opt[Boolean](
-    "debug",
-    default = Some(false),
-    short = 'd',
+
+  val debug: ScallopOption[Boolean] = opt[Boolean]("debug", default = Some(false), short = 'd',
     descr = "If specified: only generate document(s), do not send anything to SOLR")
-  val output: ScallopOption[Boolean] = opt[Boolean](
-    "output",
-    default = Some(false),
-    short = 'o',
+  val output: ScallopOption[Boolean] = opt[Boolean]("output", default = Some(false), short = 'o',
     descr = "If provided: output SOLR document(s) to stdout")
-  val batchSize: ScallopOption[Int] = opt[Int](
-    "dataset-batch-size",
-    default = Some(configuration.properties.getInt("default.dataset-batch-size")),
-    short = 'b',
-    descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting datasets with a query")
-  val timeout: ScallopOption[Int] = opt[Int](
-    "dataset-timeout",
+  val batchSize: ScallopOption[Int] = opt[Int]("dataset-batch-size", short = 'b',
+    default = Option(configuration.properties.getInt("default.dataset-batch-size")),
+    descr = "Number of datasets to update at once, maximized by fedora to 100 when selecting " +
+      "datasets with a query")
+  val timeout: ScallopOption[Int] = opt[Int]("dataset-timeout", short = 't',
     default = Some(configuration.properties.getInt("default.dataset-timeout")),
-    short = 't',
-    descr = "Milliseconds to pause after processing a batch of datasets " +
-      "to avoid reducing performance of the production system too much")
+    descr = "Milliseconds to pause after processing a batch of datasets to avoid reducing " +
+      "performance of the production system too much")
 
   val datasets: ScallopOption[List[String]] = trailArg[List[String]]("dataset-ids",
     descr = "One or more of: dataset id (for example 'easy-dataset:1'), " +
       "a file with a dataset id per line or " +
       "a fedora query that selects datasets (for example 'pid~easy-dataset:*', " +
-      "see also help for 'specific fields' on <fcrepo-server>/objects) ")
+      "see also help for 'specific fields' on " +
+      s"${ configuration.properties.getString("default.fcrepo-server") }/objects) ")
 
-  footer("")
+  verify()
 }

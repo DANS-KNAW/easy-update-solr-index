@@ -11,6 +11,7 @@
 *~
 *.swp
 /*.iml
+*.sc
 /.idea/
 .DS_Store
 /apphome.sh
@@ -19,10 +20,11 @@
 /data-*/
 /.vagrant/
 /.yum-repo
+/.dans.knaw.nl-yum-repo
+*.retry
 
 # Eclipse
 /.project
 /.settings
 /.classpath
 /.cache
-/.dans.knaw.nl-yum-repo/

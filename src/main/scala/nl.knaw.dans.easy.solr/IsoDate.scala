@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,8 @@ package nl.knaw.dans.easy.solr
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
-
 object IsoDate {
   def format(s: String, p: String): String = {
-    def formatWithPattern(s: String, pat: String): String =
-      DateTime.parse(s).toString(DateTimeFormat.forPattern(pat))
-
     p match {
       case "YEAR" => formatWithPattern(s, "yyyy")
       case "MONTH" => formatWithPattern(s, "yyyy-MM")
@@ -33,5 +29,9 @@ object IsoDate {
       case "SECOND" => formatWithPattern(s, "yyyy-MM-dd'T'HH:mm:ss")
       case _ => formatWithPattern(s, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     }
+  }
+
+  private def formatWithPattern(s: String, pat: String): String = {
+    DateTime.parse(s).toString(DateTimeFormat.forPattern(pat))
   }
 }

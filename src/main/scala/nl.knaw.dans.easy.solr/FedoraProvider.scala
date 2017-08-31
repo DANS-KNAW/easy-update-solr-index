@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,17 @@
  */
 package nl.knaw.dans.easy.solr
 
+import scala.util.Try
+
 trait FedoraProvider {
 
-  def getDc(pid: String): String
+  def getDc(pid: String): Try[String]
 
-  def getEmd(pid: String): String
+  def getEmd(pid: String): Try[String]
 
-  def getAmd(pid: String): String
+  def getAmd(pid: String): Try[String]
 
-  def getPrsql(pid: String): String
+  def getPrsql(pid: String): Try[String]
 
-  def getRelsExt(pid: String): String
+  def getRelsExt(pid: String): Try[String]
 }

@@ -1,5 +1,5 @@
 easy-update-solr-index
-===========
+======================
 [![Build Status](https://travis-ci.org/DANS-KNAW/easy-update-solr-index.png?branch=master)](https://travis-ci.org/DANS-KNAW/easy-update-solr-index)
 
 Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.
@@ -27,20 +27,15 @@ ARGUMENTS
      -t, --dataset-timeout  <arg>      Milliseconds to pause after processing a batch of datasets to avoid
                                        reducing performance of the production system too much (default = 1000)
      -d, --debug                       If specified: only generate document(s), do not send anything to SOLR
-     -p, --fcrepo-password  <arg>      Password for fcrepo-user (default = fedoraAdmin)
-     -f, --fcrepo-server  <arg>        URL of Fedora Commons Repository Server to connect to
-                                       (default = http://localhost:8080/fedora)
-     -u, --fcrepo-user  <arg>          User to connect to fcrepo-server (default = fedoraAdmin)
      -o, --output                      If provided: output SOLR document(s) to stdout
-     -s, --solr-update-url  <arg>      URL to POST SOLR documents to
-                                       (default = http://localhost:8080/solr/datasets/update)
          --help                        Show help message
          --version                     Show version of this program
-   
+
     trailing arguments:
      dataset-ids (required)   One or more of: dataset id (for example 'easy-dataset:1'), a file with a dataset id
                               per line or a fedora query that selects datasets (for example 'pid~easy-dataset:*',
-                              see also help for 'specific fields' on <fcrepo-server>/objects)
+                              see also help for 'specific fields' on
+                              http://deasy.dans.knaw.nl:8080/fedora/objects)
 
 Note that the actual defaults (shown with `--help`) depend on the actual configuration.
 

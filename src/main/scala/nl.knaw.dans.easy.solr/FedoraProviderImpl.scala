@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,51 +15,44 @@
  */
 package nl.knaw.dans.easy.solr
 
-import com.yourmediashelf.fedora.client.FedoraClient._
+import java.nio.charset.StandardCharsets
+
 import com.yourmediashelf.fedora.client.request.FedoraRequest
 import com.yourmediashelf.fedora.client.{ FedoraClient, FedoraClientException, FedoraCredentials }
+import nl.knaw.dans.lib.error._
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.io.IOUtils
-import org.slf4j.{ Logger, LoggerFactory }
+import resource._
 
-import scala.util.Try
+import scala.util.{ Failure, Try }
 
-case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProvider {
-  val log: Logger = LoggerFactory.getLogger(getClass)
-  FedoraRequest.setDefaultClient(
-    new FedoraClient(
-      credentials
-    ) {override def toString = s"${ super.toString } ($credentials)" }
-  )
+case class FedoraProviderImpl(credentials: FedoraCredentials) extends FedoraProvider with DebugEnhancedLogging {
+  FedoraRequest.setDefaultClient(new FedoraClient(credentials))
 
-  private def datastreamToString(pid: String, dsId: String): String = {
-    val inputStream = Try {
-      getDatastreamDissemination(pid, dsId).execute()
-    }.recoverWith {
-      // unwrap the haystack around the needle
-      case e: FedoraClientException if e.getStatus == 404 => throw new RuntimeException(
-        // FedoraClientException gives the body of the HTTP-response as message.
-        // This body is just a web page wrapped around the status line.
-        // The FedoraClientException does not provide the status line of the HTTP-response,
-        // so we re-assemble a simple message for probable common errors.
-        s"Could not read datastream $dsId of $pid, HTTP code ${ e.getStatus }, $credentials"
-      )
-    }.get.getEntityInputStream
-    try {
-      val s = IOUtils.toString(inputStream, "UTF-8")
-      if (log.isDebugEnabled) log.debug(s"Retrieved pid=$pid, ds=$dsId:$s")
-      s
-    } finally {
-      inputStream.close()
-    }
+  private def datastreamToString(pid: String, dsId: String): Try[String] = {
+    managed(FedoraClient.getDatastreamDissemination(pid, dsId).execute())
+      .flatMap(response => managed(response.getEntityInputStream))
+      .map(inputStream => IOUtils.toString(inputStream, StandardCharsets.UTF_8))
+      .tried
+      .doIfSuccess(s => debug(s"Retrieved pid=$pid, ds=$dsId:$s"))
+      .recoverWith {
+        // unwrap the haystack around the needle
+        case e: FedoraClientException if e.getStatus == 404 => Failure(new RuntimeException(
+          // FedoraClientException gives the body of the HTTP-response as message.
+          // This body is just a web page wrapped around the status line.
+          // The FedoraClientException does not provide the status line of the HTTP-response,
+          // so we re-assemble a simple message for probable common errors.
+          s"Could not read datastream $dsId of $pid, HTTP code ${ e.getStatus }, $credentials"))
+      }
   }
 
-  override def getDc(pid: String): String = datastreamToString(pid, "DC")
+  override def getDc(pid: String): Try[String] = datastreamToString(pid, "DC")
 
-  override def getRelsExt(pid: String): String = datastreamToString(pid, "RELS-EXT")
+  override def getRelsExt(pid: String): Try[String] = datastreamToString(pid, "RELS-EXT")
 
-  override def getAmd(pid: String): String = datastreamToString(pid, "AMD")
+  override def getAmd(pid: String): Try[String] = datastreamToString(pid, "AMD")
 
-  override def getPrsql(pid: String): String = datastreamToString(pid, "PRSQL")
+  override def getPrsql(pid: String): Try[String] = datastreamToString(pid, "PRSQL")
 
-  override def getEmd(pid: String): String = datastreamToString(pid, "EMD")
+  override def getEmd(pid: String): Try[String] = datastreamToString(pid, "EMD")
 }

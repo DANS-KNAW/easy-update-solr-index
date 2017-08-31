@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,23 @@
 package nl.knaw.dans.easy.solr
 
 import java.io.{ ByteArrayOutputStream, File }
+import java.nio.file.Paths
 
-import org.scalatest._
+import nl.knaw.dans.easy.solr.CustomMatchers._
+import org.apache.commons.configuration.PropertiesConfiguration
+import org.scalatest.{ FlatSpec, Matchers }
 
-class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
-  System.setProperty("app.home", "src/main/assembly/dist") // Use the default settings in this test
+class CommandLineOptionsSpec extends FlatSpec with Matchers {
+  private val resourceDirString: String = Paths.get(getClass.getResource("/").toURI).toAbsolutePath.toString
 
-  private val clo = new CommandLineOptions(Array[String](), Configuration()) {
+  private val mockedConfiguration = new Configuration("version x.y.z", new PropertiesConfiguration() {
+    setDelimiterParsingDisabled(true)
+    load(Paths.get(resourceDirString + "/debug-config", "application.properties").toFile)
+  })
+
+  val mockedArgs = Array.empty[String]
+
+  private val clo = new CommandLineOptions(mockedArgs, mockedConfiguration) {
     // avoids System.exit() in case of invalid arguments or "--help"
     override def verify(): Unit = {}
   }
@@ -36,9 +46,9 @@ class ReadmeSpec extends FlatSpec with Matchers with CustomMatchers {
   }
 
   "options in help info" should "be part of README.md" in {
-    val lineSeparators = s"(${System.lineSeparator()})+"
-    val options = helpInfo.split(s"${lineSeparators}Options:$lineSeparators")(1)
-    options.trim.length shouldNot be (0)
+    val lineSeparators = s"(${ System.lineSeparator() })+"
+    val options = helpInfo.split(s"${ lineSeparators }Options:$lineSeparators")(1)
+    options.trim.length shouldNot be(0)
     new File("README.md") should containTrimmed(options)
   }
 

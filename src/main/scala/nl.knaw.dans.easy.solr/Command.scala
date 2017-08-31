@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,105 +15,38 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.io.{ File, FileInputStream }
-import java.lang.Thread.sleep
+import java.io.File
+import java.net.URL
+import java.nio.charset.StandardCharsets
 
-import com.yourmediashelf.fedora.client.FedoraClient.findObjects
-import nl.knaw.dans.lib.error._
-import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.commons.io.IOUtils.readLines
-import resource._
+import com.yourmediashelf.fedora.client.FedoraCredentials
+import resource.Using
 
-import scala.annotation.tailrec
-import scala.collection.JavaConverters._
-import scala.language.reflectiveCalls
-import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
-import scala.xml.PrettyPrinter
-
-object Command extends App with DebugEnhancedLogging {
-  type FeedBackMessage = String
+object Command extends App {
 
   val configuration = Configuration()
+  val clo = new CommandLineOptions(args, configuration)
+  implicit val settings: Settings = new Settings(
+    batchSize = clo.batchSize(),
+    timeout = clo.timeout(),
+    testMode = clo.debug(),
+    output = clo.output(),
+    datasets = clo.datasets(),
+    solr = SolrProviderImpl(new URL(configuration.properties.getString("default.solr-update-url"))),
+    fedora = FedoraProviderImpl(
+      new FedoraCredentials(
+        configuration.properties.getString("default.fcrepo-server"),
+        configuration.properties.getString("default.fcrepo-user"),
+        configuration.properties.getString("default.fcrepo-password"))))
 
-  val commandLine: CommandLineOptions = new CommandLineOptions(args, configuration) {
-    verify()
+  val files = settings.datasets.filter(new File(_).exists())
+  val queries = settings.datasets.filter(_ startsWith "pid~")
+  val ids = settings.datasets.toSet -- files -- queries
+  EasyUpdateSolrIndex.executeBatches(ids.toSeq)
+  for (file <- files) {
+    EasyUpdateSolrIndex.executeBatches(Using.fileLines(StandardCharsets.UTF_8)(new File(file)).toSeq)
   }
-  val app = new EasyUpdateSolrIndexApp(new ApplicationWiring(configuration))
-
-  managed(app)
-    .acquireAndGet(app => {
-      for {
-        _ <- app.init()
-        msg <- run(app)
-      } yield msg
-    })
-    .doIfSuccess(msg => println(s"OK: $msg"))
-    .doIfFailure { case e => logger.error(e.getMessage, e) }
-    .doIfFailure { case NonFatal(e) => println(s"FAILED: ${ e.getMessage }") }
-
-  private def run(app: EasyUpdateSolrIndexApp): Try[FeedBackMessage] = {
-
-    implicit val settings: Settings = Settings(commandLine)
-    val files = settings.datasets.filter(s => new File(s).exists())
-    val queries = settings.datasets.filter(s => s.startsWith("pid~"))
-    val ids = settings.datasets.toSet -- files -- queries
-    executeBatches(ids.toSeq)
-    files.foreach(s => executeBatches(readLines(new FileInputStream(new File(s))).asScala))
-    queries.foreach(datasetsFromQuery(_))
-    Success(s"Finished $queries")
+  for (query <- queries) {
+    EasyUpdateSolrIndex.datasetsFromQuery(query)
   }
-
-  @tailrec
-  def executeBatches(lines: Seq[String])(implicit settings: Settings): Unit = {
-    val (current, remainder) = lines.splitAt(settings.batchSize)
-    execute(current)
-    if (remainder.nonEmpty)
-      executeBatches(remainder)
-  }
-
-  @tailrec
-  def datasetsFromQuery(query: String, token: Option[String] = None)
-                       (implicit settings: Settings): Unit = {
-    val objectsQuery = findObjects().maxResults(settings.batchSize).pid.query(query)
-    val objectsResponse = token match {
-      case None =>
-        logger.info(s"Start $query")
-        objectsQuery.execute
-      case Some(t) =>
-        objectsQuery.sessionToken(t).execute
-    }
-    execute(objectsResponse.getPids.asScala)
-    if (objectsResponse.hasNext) datasetsFromQuery(query, Some(objectsResponse.getToken))
-    else logger.info(s"Finished $query")
-  }
-
-  def execute(datasets: Seq[String])
-             (implicit settings: Settings): Unit = {
-    val docs = datasets.map(createSolrDoc).filter(_.nonEmpty)
-    val s = docs.mkString("<add>", ",", "</add>")
-    if (docs.nonEmpty) settings.solr.update(s) match {
-      case Success(_) => logger.info(s"Committed ${ docs.size } documents for ${ datasets.size } datasets to SOLR index")
-      case Failure(e) => logger.error(s"SOLR update FAILED: ${ e.getMessage }", e)
-    }
-    sleep(settings.timeout)
-  }
-
-  private def createSolrDoc(dataset: String)
-                           (implicit settings: Settings): String =
-    Try {
-      val solrDocString = new PrettyPrinter(160, 2).format(
-        new SolrDocumentGenerator(settings.fedora, dataset).toXml
-      )
-      if (settings.output) println(solrDocString)
-      logger.info(s"Generated SOLR document for $dataset")
-      logger.debug(s"Contents of SOLR document for $dataset: $solrDocString")
-      solrDocString
-    } match {
-      case Success(s) => s
-      case Failure(e) =>
-        // exception not in log, to avoid tons of stack traces in case of input errors
-        logger.error(s"Fetching data for SOLR update of $dataset FAILED: ${ e.getMessage }")
-        ""
-    }
 }

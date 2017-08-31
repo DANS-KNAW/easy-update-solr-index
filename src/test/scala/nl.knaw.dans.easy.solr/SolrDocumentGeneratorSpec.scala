@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,15 @@ package nl.knaw.dans.easy.solr
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
-import org.slf4j.Logger
 
+import scala.util.Success
 import scala.xml._
 
-class SolrDocumentGeneratorSpec extends FlatSpec
-  with Matchers
-  with Inside
-  with MockFactory
-  with OneInstancePerTest {
+class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with MockFactory {
   /*
    * Mocking and helper functions.
    */
-  val fedora: FedoraProvider = mock[FedoraProvider]
-  val log: Logger = mock[Logger]
+  private val fedora: FedoraProvider = mock[FedoraProvider]
 
   private def expectEmptyXmlByDefault = {
     expectDc(<dc/>)
@@ -40,20 +35,19 @@ class SolrDocumentGeneratorSpec extends FlatSpec
     expectRelsExt(<RDF />)
   }
 
-  private def expectDc(xml: Elem) = fedora.getDc _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectDc(xml: Elem) = fedora.getDc _ expects * anyNumberOfTimes() returning Success(xml.toString)
 
-  private def expectEmd(xml: Elem) = fedora.getEmd _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectEmd(xml: Elem) = fedora.getEmd _ expects * anyNumberOfTimes() returning Success(xml.toString)
 
-  private def expectAmd(xml: Elem) = fedora.getAmd _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectAmd(xml: Elem) = fedora.getAmd _ expects * anyNumberOfTimes() returning Success(xml.toString)
 
-  private def expectPrsl(xml: Elem) = fedora.getPrsql _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectPrsl(xml: Elem) = fedora.getPrsql _ expects * anyNumberOfTimes() returning Success(xml.toString)
 
-  private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning xml.toString
+  private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning Success(xml.toString)
 
-  private def expectWarningLogged() = (log.warn(_: String)) expects * atLeastOnce()
-
-  private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] =
+  private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] = {
     (docRoot \\ "doc" \ "field").filter(f => (f \ "@name").text == field).map(_.text)
+  }
 
   /*
    * Tests
@@ -61,16 +55,22 @@ class SolrDocumentGeneratorSpec extends FlatSpec
 
   "minimal EMD" should "result in only standard fields" in {
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val docRoot = generator.toXml
 
-    docRoot.label should be("doc")
-    val fields = (docRoot \ "field").map(f => (f \ "@name").text -> f.text)
-    fields should have length 5
-    fields should contain("sid" -> "test-pid:123")
-    fields should contain("type" -> "easy-dataset")
-    fields should contain("type" -> "dataset")
-    fields should contain("repository_id" -> "easy")
-    fields should contain("amd_workflow_progress" -> "0")
+        docRoot.label shouldBe "doc"
+        (docRoot \ "field").map(f => (f \ "@name").text -> f.text) should {
+          have length 5 and
+            contain allOf(
+            "sid" -> "test-pid:123",
+            "type" -> "easy-dataset",
+            "type" -> "dataset",
+            "repository_id" -> "easy",
+            "amd_workflow_progress" -> "0"
+          )
+        }
+    }
   }
 
   "all dc_* fields" should "be extracted from EMD" in {
@@ -127,28 +127,31 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:contributor>
     </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val fields = (docRoot \ "field").map(f => (f \ "@name").text -> f.text)
 
-    fields should contain("dc_title" -> "title")
-    fields should contain("dc_description" -> "description")
-    fields should contain("dc_subject" -> "subject")
-    fields should contain("dc_type" -> "Dataset")
-    fields should contain("dc_format" -> "format")
-    fields should contain("dc_identifier" -> "easy-dataset:123")
-    fields should contain("dc_source" -> "source")
-    fields should contain("dc_language" -> "dut/nld")
-    fields should contain("dc_publisher" -> "publisher")
-    fields should contain("dc_rights" -> "OPEN_ACCESS")
-    fields should contain("dc_coverage" -> "spatial")
-    fields should contain("dc_date" -> "2016-01-01")
-    fields should contain("dc_relation" -> "relation")
-    fields should contain("dc_creator" -> "creator-org")
-    fields should contain("dc_contributor" -> "contributor-org")
-    fields should contain("dc_title_s" -> "title")
-    fields should contain("dc_creator_s" -> "creator-org")
-    fields should contain("dc_publisher_s" -> "publisher")
-    fields should contain("dc_contributor_s" -> "contributor-org")
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        (generator.toXml \ "field").map(f => (f \ "@name").text -> f.text) should contain allOf(
+          "dc_title" -> "title",
+          "dc_description" -> "description",
+          "dc_subject" -> "subject",
+          "dc_type" -> "Dataset",
+          "dc_format" -> "format",
+          "dc_identifier" -> "easy-dataset:123",
+          "dc_source" -> "source",
+          "dc_language" -> "dut/nld",
+          "dc_publisher" -> "publisher",
+          "dc_rights" -> "OPEN_ACCESS",
+          "dc_coverage" -> "spatial",
+          "dc_date" -> "2016-01-01",
+          "dc_relation" -> "relation",
+          "dc_creator" -> "creator-org",
+          "dc_contributor" -> "contributor-org",
+          "dc_title_s" -> "title",
+          "dc_creator_s" -> "creator-org",
+          "dc_publisher_s" -> "publisher",
+          "dc_contributor_s" -> "contributor-org"
+        )
+    }
   }
 
   "dc_*_s sort fields with multiple values" should "contain concatenated values" in {
@@ -180,23 +183,27 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:contributor>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
 
-    val sortTitle = getSolrDocFieldValues(docRoot, "dc_title_s")
-    sortTitle should have length 1
-    sortTitle should contain("title1 title2")
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val docRoot = generator.toXml
 
-    val sortPublisher = getSolrDocFieldValues(docRoot, "dc_publisher_s")
-    sortPublisher should have length 1
-    sortPublisher should contain("publisher1 publisher2")
+        getSolrDocFieldValues(docRoot, "dc_title_s") should {
+          have length 1 and contain("title1 title2")
+        }
 
-    val sortCreator = getSolrDocFieldValues(docRoot, "dc_creator_s")
-    sortCreator should have length 1
-    sortCreator should contain("creator-org1 creator-org2")
+        getSolrDocFieldValues(docRoot, "dc_publisher_s") should {
+          have length 1 and contain("publisher1 publisher2")
+        }
 
-    val sortContributor = getSolrDocFieldValues(docRoot, "dc_contributor_s")
-    sortContributor should have length 1
-    sortContributor should contain("contributor-org1 contributor-org2")
+        getSolrDocFieldValues(docRoot, "dc_creator_s") should {
+          have length 1 and contain("creator-org1 creator-org2")
+        }
+
+        getSolrDocFieldValues(docRoot, "dc_contributor_s") should {
+          have length 1 and contain("contributor-org1 contributor-org2")
+        }
+    }
   }
 
   "dc_publisher_s" should "be empty if there are no publishers" in {
@@ -206,10 +213,11 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:publisher>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
 
-    val sortPublisher = getSolrDocFieldValues(docRoot, "dc_publisher_s")
-    sortPublisher should have length 0
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "dc_publisher_s") should have length 0
+    }
   }
 
   "dc_date" should "have formated dates for eas:scheme=\"W3CDTF\"" in {
@@ -221,10 +229,13 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:date>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val dcDates = getSolrDocFieldValues(docRoot, "dc_date")
-    dcDates should contain("1991-01-01 to 1993-12-31")
-    dcDates should contain("1994-01-01")
+
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "dc_date") should {
+          contain("1991-01-01 to 1993-12-31") and contain("1994-01-01")
+        }
+    }
   }
 
   "dc_creator" should "contain correctly formatted personal and organisation content" in {
@@ -246,11 +257,14 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:creator>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val dcCreators = getSolrDocFieldValues(docRoot, "dc_creator")
-    dcCreators should contain("surmane, title I.N.I.T.I.A.L.S. prefix (org)")
-    dcCreators should contain("org")
-    dcCreators should contain("creator-in-plain-text")
+
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "dc_creator") should {
+          contain("surmane, title I.N.I.T.I.A.L.S. prefix (org)") and
+            (contain("org") and contain("creator-in-plain-text"))
+        }
+    }
   }
 
   "dc_coverage" should "contain point and box coordinates when available" in {
@@ -276,12 +290,15 @@ class SolrDocumentGeneratorSpec extends FlatSpec
       </emd:coverage>
     </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val dcCoverage = getSolrDocFieldValues(docRoot, "dc_coverage")
-    dcCoverage should contain("spatial1")
-    dcCoverage should contain("IJZL")
-    dcCoverage should contain("scheme=RD x=155000 y=463000")
-    dcCoverage should contain("scheme=RD north=1 east=3 south=4 west=2")
+
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val dcCoverage = getSolrDocFieldValues(generator.toXml, "dc_coverage")
+        dcCoverage should contain("spatial1")
+        dcCoverage should contain("IJZL")
+        dcCoverage should contain("scheme=RD x=155000 y=463000")
+        dcCoverage should contain("scheme=RD north=1 east=3 south=4 west=2")
+    }
   }
 
   "dc_relation" should "contain correctly handled title and uri" in {
@@ -299,11 +316,14 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:relation>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val dcRelation = getSolrDocFieldValues(docRoot, "dc_relation")
-    dcRelation should contain("relation")
-    dcRelation should contain("title=no-qualif")
-    dcRelation should contain("title=ref-title URI=http://dans.knaw.nl")
+
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val dcRelation = getSolrDocFieldValues(generator.toXml, "dc_relation")
+        dcRelation should contain("relation")
+        dcRelation should contain("title=no-qualif")
+        dcRelation should contain("title=ref-title URI=http://dans.knaw.nl")
+    }
   }
 
   "archaeology_dc_subject" should "only get values from subject fields with corresponding schemeId attribute" in {
@@ -316,11 +336,16 @@ class SolrDocumentGeneratorSpec extends FlatSpec
          </emd:subject>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val archSubjects = (docRoot \\ "field").filter(f => (f \ "@name").text == "archaeology_dc_subject").map(_.text)
 
-    archSubjects should contain("ELCF")
-    archSubjects shouldNot contain("some other subject")
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val archSubjects = (generator.toXml \\ "field")
+          .withFilter(f => (f \ "@name").text == "archaeology_dc_subject")
+          .map(_.text)
+
+        archSubjects should contain("ELCF")
+        archSubjects shouldNot contain("some other subject")
+    }
   }
 
   "archaeology_dcterms_temporal" should "only get values from subject fields with corresponding schemeId attribute" in {
@@ -333,29 +358,33 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:coverage>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val archTemporals = getSolrDocFieldValues(docRoot, "archaeology_dcterms_temporal")
 
-    archTemporals should contain("MESO")
-    archTemporals shouldNot contain("some other temporal")
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val archTemporals = getSolrDocFieldValues(generator.toXml, "archaeology_dcterms_temporal")
+
+        archTemporals should contain("MESO")
+        archTemporals shouldNot contain("some other temporal")
+    }
   }
 
   "dai_creator" should "get value from entityId field with scheme DAI in eas:creator" in {
     val CREATOR_DAI = "123456789"
     expectEmd(
-      <easymetadata
-      xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-        <emd:creator>
-          <eas:creator>
-            <eas:entityId scheme="DAI">{CREATOR_DAI}</eas:entityId>
-          </eas:creator>
-        </emd:creator>
-      </easymetadata>)
+        <easymetadata
+        xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+          <emd:creator>
+            <eas:creator>
+              <eas:entityId scheme="DAI">{CREATOR_DAI}</eas:entityId>
+            </eas:creator>
+          </emd:creator>
+        </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val daiCreators = getSolrDocFieldValues(docRoot, "dai_creator")
 
-    daiCreators should contain(CREATOR_DAI)
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "dai_creator") should contain(CREATOR_DAI)
+    }
   }
 
   "dai_contributor" should "get value from entityId field with scheme DAI in eas:contributor" in {
@@ -370,10 +399,11 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:contributor>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val daiContributors = getSolrDocFieldValues(docRoot, "dai_contributor")
 
-    daiContributors should contain(CONTRIBUTOR_DAI)
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "dai_contributor") should contain(CONTRIBUTOR_DAI)
+    }
   }
 
   "mix of dai_creator and dai_contributor" should "not get mixed up" in {
@@ -404,16 +434,20 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </emd:contributor>
       </easymetadata>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val daiCreators = getSolrDocFieldValues(docRoot, "dai_creator")
-    val daiContributors = getSolrDocFieldValues(docRoot, "dai_contributor")
 
-    daiCreators should have length 2
-    daiContributors should have length 2
-    daiCreators should contain(CREATOR1_DAI)
-    daiCreators should contain(CREATOR2_DAI)
-    daiContributors should contain(CONTRIBUTOR1_DAI)
-    daiContributors should contain(CONTRIBUTOR2_DAI)
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val docRoot = generator.toXml
+        val daiCreators = getSolrDocFieldValues(docRoot, "dai_creator")
+        val daiContributors = getSolrDocFieldValues(docRoot, "dai_contributor")
+
+        daiCreators should have length 2
+        daiContributors should have length 2
+        daiCreators should contain(CREATOR1_DAI)
+        daiCreators should contain(CREATOR2_DAI)
+        daiContributors should contain(CONTRIBUTOR1_DAI)
+        daiContributors should contain(CONTRIBUTOR2_DAI)
+    }
   }
 
   "permission request status" should "take values from multiple fields and format it as a string" in {
@@ -443,11 +477,13 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </sequences>
       </psl:permissionSequenceList>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val requestStatuses = getSolrDocFieldValues(docRoot, "psl_permission_status")
 
-    requestStatuses should have length 1
-    requestStatuses should contain(s"$REQUESTER_ID $STATE $LAST_MODIFIED")
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "psl_permission_status") should {
+          have length 1 and contain(s"$REQUESTER_ID $STATE $LAST_MODIFIED")
+        }
+    }
   }
 
   "multiple permission request status" should "each be formatted in its own string" in {
@@ -517,13 +553,16 @@ class SolrDocumentGeneratorSpec extends FlatSpec
         </sequences>
       </psl:permissionSequenceList>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val requestStatuses = getSolrDocFieldValues(docRoot, "psl_permission_status")
 
-    requestStatuses should have length 3
-    requestStatuses should contain(s"$REQUESTER_ID3 $STATE3 $LAST_MODIFIED3")
-    requestStatuses should contain(s"$REQUESTER_ID2 $STATE2 $LAST_MODIFIED2")
-    requestStatuses should contain(s"$REQUESTER_ID1 $STATE1 $LAST_MODIFIED1")
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        val requestStatuses = getSolrDocFieldValues(generator.toXml, "psl_permission_status")
+
+        requestStatuses should have length 3
+        requestStatuses should contain(s"$REQUESTER_ID3 $STATE3 $LAST_MODIFIED3")
+        requestStatuses should contain(s"$REQUESTER_ID2 $STATE2 $LAST_MODIFIED2")
+        requestStatuses should contain(s"$REQUESTER_ID1 $STATE1 $LAST_MODIFIED1")
+    }
   }
 
   "easy-collection" should "be read from RELS-EXT" in {
@@ -546,26 +585,13 @@ class SolrDocumentGeneratorSpec extends FlatSpec
       </rdf:Description>
     </rdf:RDF>)
     expectEmptyXmlByDefault
-    val docRoot = new SolrDocumentGenerator(fedora, "test-pid:123").toXml
-    val collections = getSolrDocFieldValues(docRoot, "easy_collections")
 
-    collections should have length 1
-    collections should contain(STRIPPED_COLLECTION)
+    inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
+      case Success(generator) =>
+        getSolrDocFieldValues(generator.toXml, "easy_collections") should {
+          have length 1 and contain(STRIPPED_COLLECTION)
+        }
+    }
   }
-
-  "two created dates" should "result in warning logged" in {
-    expectEmd(
-      <easymetadata
-        xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-        <emd:date>
-          <eas:created eas:scheme="W3CDTF" eas:format="YEAR">2013-01-01T00:00:00.000+01:00</eas:created>
-          <eas:created eas:scheme="W3CDTF" eas:format="YEAR">2013-01-02T00:00:00.000+01:00</eas:created>
-        </emd:date>
-      </easymetadata>)
-    expectEmptyXmlByDefault
-    expectWarningLogged()
-    new SolrDocumentGenerator(fedora, "test-pid:123", log).toXml
-  }
-
 }
 

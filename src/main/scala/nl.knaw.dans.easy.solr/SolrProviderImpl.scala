@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015-2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+ * Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,21 @@
 package nl.knaw.dans.easy.solr
 
 import java.net.URL
+import java.nio.charset.StandardCharsets
 
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 import scalaj.http.Http
 
 case class SolrProviderImpl(solrUrl: URL) extends SolrProvider {
   override def update(doc: String): Try[Unit] = Try {
     val result = Http(solrUrl.toString)
       .header("Content-Type", "application/xml; charset=utf-8")
-      .param("commit", "true").postData(doc.getBytes("UTF-8"))
+      .param("commit", "true")
+      .postData(doc.getBytes(StandardCharsets.UTF_8))
       .asString
-    if (result.isError) throw new RuntimeException(s"${ result.statusLine }, details: ${ result.body }")
-  }
+
+    if (result.isError)
+      Failure(new RuntimeException(s"${ result.statusLine }, details: ${ result.body }"))
+    else Success(())
+  }.flatten
 }
