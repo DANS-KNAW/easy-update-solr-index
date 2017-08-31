@@ -21,8 +21,7 @@ import org.scalatest._
 import scala.util.Success
 import scala.xml._
 
-class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with MockFactory
-  with OneInstancePerTest {
+class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with MockFactory {
   /*
    * Mocking and helper functions.
    */
@@ -46,8 +45,9 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
 
   private def expectRelsExt(xml: Elem) = fedora.getRelsExt _ expects * anyNumberOfTimes() returning Success(xml.toString)
 
-  private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] =
+  private def getSolrDocFieldValues(docRoot: Elem, field: String): Seq[String] = {
     (docRoot \\ "doc" \ "field").filter(f => (f \ "@name").text == field).map(_.text)
+  }
 
   /*
    * Tests
