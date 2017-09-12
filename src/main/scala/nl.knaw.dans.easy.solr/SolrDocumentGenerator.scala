@@ -137,6 +137,16 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
       case (Seq(), Seq()) => spatial.text
       case (Seq(point, _ @ _*), Seq()) => extractPointForDc(point)
       case (Seq(), Seq(box, _ @ _*)) => extractBoxForDc(box)
+      /*
+       To future developers: we do currently not index a polygon, even though this kind of 'Spatial'
+       was added to DDM, EMD, etc. for the PAN use case. If we want to index polygons in the future,
+       that's fine, as long as you keep the following thing in mind:
+       - PAN sends us a polygon of the town (gemeente) in which an object is found, and we are NOT!!!
+         allowed to convert this to a point in order to show this on our map. If you want to index
+         this polygon, make sure it is never/nowhere used as a specific point. This currently also
+         includes boxes, as they get converted to a center coordinate in our current map
+         implementation.
+       */
     }
   }
 
