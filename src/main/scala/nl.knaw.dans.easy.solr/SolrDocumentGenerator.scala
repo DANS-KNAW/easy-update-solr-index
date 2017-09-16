@@ -52,7 +52,7 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
   /* with sort fields */
 
   def extractMappingFromEmd(name: String)(f: Node => String): (String, Seq[String]) = {
-    s"dc_$name" -> (emd \ name \ "_").map(f)
+    s"dc_$name" -> (emd \ name \ "_").map(f).filter(_.nonEmpty)
   }
 
   lazy val dcTitleFromEmdMapping @ (dcTitleKey, dcTitleValues) = {
@@ -133,10 +133,11 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
   }
 
   def extractSpatialForDc(spatial: Node): String = {
-    (spatial \ "point", spatial \ "box") match {
-      case (Seq(), Seq()) => spatial.text
-      case (Seq(point, _ @ _*), Seq()) => extractPointForDc(point)
-      case (Seq(), Seq(box, _ @ _*)) => extractBoxForDc(box)
+    (spatial \ "point", spatial \ "box", spatial \ "polygon") match {
+      case (Seq(), Seq(), Seq()) => spatial.text
+      case (Seq(point, _ @ _*), Seq(), Seq()) => extractPointForDc(point)
+      case (Seq(), Seq(box, _ @ _*), Seq()) => extractBoxForDc(box)
+      case (Seq(), Seq(), _) => ""
       /*
        To future developers: we do currently not index a polygon, even though this kind of 'Spatial'
        was added to DDM, EMD, etc. for the PAN use case. If we want to index polygons in the future,
