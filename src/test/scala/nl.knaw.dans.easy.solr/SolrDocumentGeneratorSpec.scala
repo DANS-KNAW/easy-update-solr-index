@@ -287,17 +287,28 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
             <eas:west>2</eas:west>
           </eas:box>
         </eas:spatial>
+        <eas:spatial>
+          <eas:polygon eas:scheme="degrees"> <!-- a polygon should be skipped! -->
+            <eas:polygon-exterior>
+              <eas:polygon-point><eas:x>52.08110</eas:x><eas:y>4.34521</eas:y></eas:polygon-point>
+              <eas:polygon-point><eas:x>52.08071</eas:x><eas:y>4.34422</eas:y></eas:polygon-point>
+              <eas:polygon-point><eas:x>52.07913</eas:x><eas:y>4.34332</eas:y></eas:polygon-point>
+              <eas:polygon-point><eas:x>52.08110</eas:x><eas:y>4.34521</eas:y></eas:polygon-point>
+            </eas:polygon-exterior>
+          </eas:polygon>
+        </eas:spatial>
       </emd:coverage>
     </easymetadata>)
     expectEmptyXmlByDefault
 
     inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
       case Success(generator) =>
-        val dcCoverage = getSolrDocFieldValues(generator.toXml, "dc_coverage")
-        dcCoverage should contain("spatial1")
-        dcCoverage should contain("IJZL")
-        dcCoverage should contain("scheme=RD x=155000 y=463000")
-        dcCoverage should contain("scheme=RD north=1 east=3 south=4 west=2")
+        getSolrDocFieldValues(generator.toXml, "dc_coverage") should contain only (
+          "spatial1",
+          "IJZL",
+          "scheme=RD x=155000 y=463000",
+          "scheme=RD north=1 east=3 south=4 west=2"
+        )
     }
   }
 
