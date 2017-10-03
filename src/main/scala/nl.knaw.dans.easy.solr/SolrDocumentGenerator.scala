@@ -210,7 +210,7 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
         val size = es.size
         if (size > 1)
           logger.warn(s"Found $size date $typeOfDate elements but only one should be allowed. Metadata may be wrong! Using the first element found.")
-        
+
         NodeSeq.fromSeq(element)
       case e => e
     }
