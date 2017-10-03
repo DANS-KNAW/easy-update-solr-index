@@ -71,11 +71,18 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
       .filter(_.nonEmpty)
       .mkString(" ")
     val name = List(nameStart, nameEnd).filter(_.nonEmpty).mkString(", ")
+    val role = (p \ "role").text
     val org = (p \ "organization").text
 
-    if (org.isEmpty) name
-    else if (name.nonEmpty) s"$name ($org)"
-    else org
+    (name, role, org) match {
+      case ("", "", "") => ""
+      case ("", "", o) => o
+      case ("", r, "") => r
+      case ("", r, o) => s"$o, $r"
+      case (n, "", "") => n
+      case (n, r, "") => s"$n, $r"
+      case (n, r, o) => s"$n, $r ($o)"
+    }
   }
 
   lazy val dcCreatorFromEmdMapping @ (dcCreatorKey, dcCreatorValues) = {
@@ -245,7 +252,7 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
   }
 
   def hasDaiScheme(n: Node): Boolean = {
-    n.attribute("scheme") match {
+    n.attribute(EAS_NAMESPACE, "scheme") match {
       case Some(Seq(s)) => s.text == "DAI"
       case _ => false
     }

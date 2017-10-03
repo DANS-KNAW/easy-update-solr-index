@@ -386,7 +386,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
         xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
           <emd:creator>
             <eas:creator>
-              <eas:entityId scheme="DAI">{CREATOR_DAI}</eas:entityId>
+              <eas:entityId eas:scheme="DAI">{CREATOR_DAI}</eas:entityId>
             </eas:creator>
           </emd:creator>
         </easymetadata>)
@@ -405,7 +405,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
       xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
         <emd:contributor>
           <eas:contributor>
-            <eas:entityId scheme="DAI">{CONTRIBUTOR_DAI}</eas:entityId>
+            <eas:entityId eas:scheme="DAI">{CONTRIBUTOR_DAI}</eas:entityId>
           </eas:contributor>
         </emd:contributor>
       </easymetadata>)
@@ -427,20 +427,20 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
       xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
         <emd:creator>
           <eas:creator>
-            <eas:entityId scheme="DAI">{CREATOR1_DAI}</eas:entityId>
+            <eas:entityId eas:scheme="DAI">{CREATOR1_DAI}</eas:entityId>
           </eas:creator>
         </emd:creator>
         <emd:creator>
           <eas:creator>
-            <eas:entityId scheme="DAI">{CREATOR2_DAI}</eas:entityId>
+            <eas:entityId eas:scheme="DAI">{CREATOR2_DAI}</eas:entityId>
           </eas:creator>
         </emd:creator>
         <emd:contributor>
           <eas:contributor>
-            <eas:entityId scheme="DAI">{CONTRIBUTOR1_DAI}</eas:entityId>
+            <eas:entityId eas:scheme="DAI">{CONTRIBUTOR1_DAI}</eas:entityId>
           </eas:contributor>
           <eas:contributor>
-            <eas:entityId scheme="DAI">{CONTRIBUTOR2_DAI}</eas:entityId>
+            <eas:entityId eas:scheme="DAI">{CONTRIBUTOR2_DAI}</eas:entityId>
           </eas:contributor>
         </emd:contributor>
       </easymetadata>)
