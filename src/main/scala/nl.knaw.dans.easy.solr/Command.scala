@@ -18,13 +18,14 @@ package nl.knaw.dans.easy.solr
 import java.io.File
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.nio.file.Paths
 
 import com.yourmediashelf.fedora.client.FedoraCredentials
 import resource.Using
 
 object Command extends App {
 
-  val configuration = Configuration()
+  val configuration = Configuration(Paths.get(System.getProperty("app.home")))
   val clo = new CommandLineOptions(args, configuration)
   implicit val settings: Settings = new Settings(
     batchSize = clo.batchSize(),
