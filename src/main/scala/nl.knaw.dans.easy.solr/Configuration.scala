@@ -15,7 +15,7 @@
  */
 package nl.knaw.dans.easy.solr
 
-import java.nio.file.{ Files, Paths }
+import java.nio.file.{ Files, Path, Paths }
 
 import org.apache.commons.configuration.PropertiesConfiguration
 import resource.managed
@@ -26,8 +26,7 @@ case class Configuration(version: String, properties: PropertiesConfiguration)
 
 object Configuration {
 
-  def apply(): Configuration = {
-    val home = Paths.get(System.getProperty("app.home"))
+  def apply(home: Path): Configuration = {
     val cfgPath = Seq(Paths.get(s"/etc/opt/dans.knaw.nl/easy-update-solr-index/"), home.resolve("cfg"))
       .find(Files.exists(_))
       .getOrElse { throw new IllegalStateException("No configuration directory found") }
