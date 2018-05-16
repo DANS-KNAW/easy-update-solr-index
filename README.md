@@ -28,8 +28,8 @@ ARGUMENTS
                                        reducing performance of the production system too much (default = 1000)
      -d, --debug                       If specified: only generate document(s), do not send anything to SOLR
      -o, --output                      If provided: output SOLR document(s) to stdout
-         --help                        Show help message
-         --version                     Show version of this program
+     -h, --help                        Show help message
+     -v, --version                     Show version of this program
 
     trailing arguments:
      dataset-ids (required)   One or more of: dataset id (for example 'easy-dataset:1'), a file with a dataset id
