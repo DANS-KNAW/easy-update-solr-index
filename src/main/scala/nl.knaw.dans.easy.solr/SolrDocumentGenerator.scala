@@ -134,14 +134,14 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
   }
 
   def extractPointForDc(point: Node): String = {
-    s"scheme=${ point.attribute(EAS_NAMESPACE, "scheme").get } x=${ (point \ "x").text } y=${ (point \ "y").text }"
+    s"scheme=${ point.attribute(EAS_NAMESPACE, "scheme").orNull } x=${ (point \ "x").text } y=${ (point \ "y").text }"
   }
 
   def extractBoxForDc(box: Node): String = {
     val coordinates = List("north", "east", "south", "west")
       .map(cn => s"$cn=${ (box \ cn).text }")
       .mkString(" ")
-    s"scheme=${ box.attribute(EAS_NAMESPACE, "scheme").get } $coordinates"
+    s"scheme=${ box.attribute(EAS_NAMESPACE, "scheme").orNull } $coordinates"
   }
 
   def extractPolygonForDc(polygon: Node): String = {
@@ -206,7 +206,7 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
 
   def getEasDateElement(typeOfDate: String): NodeSeq = {
     (emd \ "date" \ typeOfDate).filter(_.namespace == EAS_NAMESPACE) match {
-      case es @ Seq(element, tail @ _*) =>
+      case es @ Seq(element, _ @ _*) =>
         val size = es.size
         if (size > 1)
           logger.warn(s"Found $size date $typeOfDate elements but only one should be allowed. Metadata may be wrong! Using the first element found.")
