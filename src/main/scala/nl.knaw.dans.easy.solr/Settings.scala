@@ -31,9 +31,11 @@ object Settings {
   /** Backward compatible for EasyIngestFlow */
   def apply(fedoraCredentials: FedoraCredentials,
             dataset: String,
-            solr: URL): Settings = new Settings(
+            solr: URL,
+            userAgent: String,
+           ): Settings = new Settings(
     testMode = false,
     datasets = List(dataset),
-    solr = SolrProviderImpl(solr),
+    solr = SolrProviderImpl(solr, userAgent),
     fedora = FedoraProviderImpl(fedoraCredentials))
 }

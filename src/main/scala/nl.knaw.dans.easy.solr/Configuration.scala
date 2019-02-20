@@ -32,7 +32,7 @@ object Configuration {
       .getOrElse { throw new IllegalStateException("No configuration directory found") }
 
     new Configuration(
-      version = managed(Source.fromFile(home.resolve("bin/version").toFile)).acquireAndGet(_.mkString),
+      version = managed(Source.fromFile(home.resolve("bin/version").toFile)).acquireAndGet(_.mkString).stripLineEnd,
       properties = new PropertiesConfiguration() {
         setDelimiterParsingDisabled(true)
         load(cfgPath.resolve("application.properties").toFile)

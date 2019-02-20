@@ -33,7 +33,10 @@ object Command extends App {
     testMode = clo.debug(),
     output = clo.output(),
     datasets = clo.datasets(),
-    solr = SolrProviderImpl(new URL(configuration.properties.getString("default.solr-update-url"))),
+    solr = SolrProviderImpl(
+      new URL(configuration.properties.getString("default.solr-update-url")),
+      s"easy-update-solr-index/${ configuration.version }",
+    ),
     fedora = FedoraProviderImpl(
       new FedoraCredentials(
         configuration.properties.getString("default.fcrepo-server"),
