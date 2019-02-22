@@ -18,10 +18,14 @@ package nl.knaw.dans.easy.solr
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
-import scala.util.{ Failure, Success, Try }
-import scalaj.http.Http
+import scalaj.http.BaseHttp
 
-case class SolrProviderImpl(solrUrl: URL) extends SolrProvider {
+import scala.util.{ Failure, Success, Try }
+
+case class SolrProviderImpl(solrUrl: URL, userAgent: String) extends SolrProvider {
+
+  object Http extends BaseHttp(userAgent = userAgent)
+
   override def update(doc: String): Try[Unit] = Try {
     val result = Http(solrUrl.toString)
       .header("Content-Type", "application/xml; charset=utf-8")
