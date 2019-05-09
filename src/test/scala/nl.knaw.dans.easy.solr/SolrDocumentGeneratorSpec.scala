@@ -76,42 +76,42 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
   "all dc_* fields" should "be extracted from EMD" in {
     expectEmd(
       <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-      <emd:title>
-        <dc:title>title</dc:title>
-      </emd:title>
-      <emd:description>
-        <dc:description>description</dc:description>
-      </emd:description>
-      <emd:publisher>
-        <dc:publisher>publisher</dc:publisher>
-      </emd:publisher>
-      <emd:subject>
-        <dc:subject>subject</dc:subject>
-      </emd:subject>
-      <emd:type>
-        <dc:type eas:scheme="DCMI" eas:schemeId="common.dc.type">Dataset</dc:type>
-      </emd:type>
-      <emd:format>
-        <dc:format>format</dc:format>
-      </emd:format>
-      <emd:identifier>
-        <dc:identifier eas:scheme="DMO_ID">easy-dataset:123</dc:identifier>
-      </emd:identifier>
-      <emd:source>
-        <dc:source>source</dc:source>
-      </emd:source>
-      <emd:language>
-        <dc:language eas:scheme="ISO 639" eas:schemeId="common.dc.language">dut/nld</dc:language>
-      </emd:language>
-      <emd:rights>
-        <dct:accessRights eas:schemeId="archaeology.dcterms.accessrights">OPEN_ACCESS</dct:accessRights>
-      </emd:rights>
-      <emd:coverage>
-        <dct:spatial>spatial</dct:spatial>
-      </emd:coverage>
-      <emd:date>
-        <dct:created>2016-01-01</dct:created>
-      </emd:date>
+        <emd:title>
+          <dc:title>title</dc:title>
+        </emd:title>
+        <emd:description>
+          <dc:description>description</dc:description>
+        </emd:description>
+        <emd:publisher>
+          <dc:publisher>publisher</dc:publisher>
+        </emd:publisher>
+        <emd:subject>
+          <dc:subject>subject</dc:subject>
+        </emd:subject>
+        <emd:type>
+          <dc:type eas:scheme="DCMI" eas:schemeId="common.dc.type">Dataset</dc:type>
+        </emd:type>
+        <emd:format>
+          <dc:format>format</dc:format>
+        </emd:format>
+        <emd:identifier>
+          <dc:identifier eas:scheme="DMO_ID">easy-dataset:123</dc:identifier>
+        </emd:identifier>
+        <emd:source>
+          <dc:source>source</dc:source>
+        </emd:source>
+        <emd:language>
+          <dc:language eas:scheme="ISO 639" eas:schemeId="common.dc.language">dut/nld</dc:language>
+        </emd:language>
+        <emd:rights>
+          <dct:accessRights eas:schemeId="archaeology.dcterms.accessrights">OPEN_ACCESS</dct:accessRights>
+        </emd:rights>
+        <emd:coverage>
+          <dct:spatial>spatial</dct:spatial>
+        </emd:coverage>
+        <emd:date>
+          <dct:created>2016-01-01</dct:created>
+        </emd:date>
         <emd:relation>
           <dc:relation>relation</dc:relation>
         </emd:relation>
@@ -125,12 +125,54 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
             <eas:organization>contributor-org</eas:organization>
           </eas:contributor>
         </emd:contributor>
-    </easymetadata>)
+      </easymetadata>)
+    expectAmd(
+      <damd:administrative-md xmlns:damd="http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/" version="0.1">
+        <datasetState>PUBLISHED</datasetState>
+        <previousState>SUBMITTED</previousState>
+        <lastStateChange>2019-05-09T15:22:09.112+02:00</lastStateChange>
+        <depositorId>user001</depositorId>
+        <stateChangeDates>
+          <damd:stateChangeDate>
+            <fromState>DRAFT</fromState>
+            <toState>SUBMITTED</toState>
+            <changeDate>2019-05-09T15:04:30.329+02:00</changeDate>
+          </damd:stateChangeDate>
+          <damd:stateChangeDate>
+            <fromState>SUBMITTED</fromState>
+            <toState>DRAFT</toState>
+            <changeDate>2019-05-09T15:07:50.987+02:00</changeDate>
+          </damd:stateChangeDate>
+          <damd:stateChangeDate>
+            <fromState>DRAFT</fromState>
+            <toState>SUBMITTED</toState>
+            <changeDate>2019-05-09T15:09:10.738+02:00</changeDate>
+          </damd:stateChangeDate>
+          <damd:stateChangeDate>
+            <fromState>SUBMITTED</fromState>
+            <toState>DRAFT</toState>
+            <changeDate>2019-05-09T15:20:58.104+02:00</changeDate>
+          </damd:stateChangeDate>
+          <damd:stateChangeDate>
+            <fromState>DRAFT</fromState>
+            <toState>SUBMITTED</toState>
+            <changeDate>2019-05-09T15:21:36.234+02:00</changeDate>
+          </damd:stateChangeDate>
+          <damd:stateChangeDate>
+            <fromState>SUBMITTED</fromState>
+            <toState>PUBLISHED</toState>
+            <changeDate>2019-05-09T15:22:09.112+02:00</changeDate>
+          </damd:stateChangeDate>
+        </stateChangeDates>
+      </damd:administrative-md>
+    )
     expectEmptyXmlByDefault
 
     inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
       case Success(generator) =>
-        (generator.toXml \ "field").map(f => (f \ "@name").text -> f.text) should contain allOf(
+        (generator.toXml \ "field")
+          .map(f => (f \ "@name").text -> f.text)
+          .filter { case (k, _) => (k startsWith "dc_") || (k startsWith "emd_date_") } should contain only(
           "dc_title" -> "title",
           "dc_description" -> "description",
           "dc_subject" -> "subject",
@@ -149,7 +191,9 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
           "dc_title_s" -> "title",
           "dc_creator_s" -> "creator-org",
           "dc_publisher_s" -> "publisher",
-          "dc_contributor_s" -> "contributor-org"
+          "dc_contributor_s" -> "contributor-org",
+          "emd_date_submitted" -> "2019-05-09T13:21:36.234Z",
+          "emd_date_published" -> "2019-05-09T13:22:09.112Z",
         )
     }
   }
@@ -269,41 +313,41 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
 
   "dc_coverage" should "contain point and box coordinates when available" in {
     expectEmd(
-    <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-      <emd:coverage>
-        <dct:spatial>spatial1</dct:spatial>
-        <dct:temporal eas:scheme="ABR" eas:schemeId="archaeology.dcterms.temporal">IJZL</dct:temporal>
-        <eas:spatial>
-          <eas:point eas:scheme="RD">
-            <eas:x>155000</eas:x>
-            <eas:y>463000</eas:y>
-          </eas:point>
-        </eas:spatial>
-        <eas:spatial>
-          <eas:box eas:scheme="RD">
-            <eas:north>1</eas:north>
-            <eas:east>3</eas:east>
-            <eas:south>4</eas:south>
-            <eas:west>2</eas:west>
-          </eas:box>
-        </eas:spatial>
-        <eas:spatial>
-          <eas:polygon eas:scheme="degrees"> <!-- a polygon should be skipped! -->
-            <eas:polygon-exterior>
-              <eas:polygon-point><eas:x>52.08110</eas:x><eas:y>4.34521</eas:y></eas:polygon-point>
-              <eas:polygon-point><eas:x>52.08071</eas:x><eas:y>4.34422</eas:y></eas:polygon-point>
-              <eas:polygon-point><eas:x>52.07913</eas:x><eas:y>4.34332</eas:y></eas:polygon-point>
-              <eas:polygon-point><eas:x>52.08110</eas:x><eas:y>4.34521</eas:y></eas:polygon-point>
-            </eas:polygon-exterior>
-          </eas:polygon>
-        </eas:spatial>
-      </emd:coverage>
-    </easymetadata>)
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:coverage>
+          <dct:spatial>spatial1</dct:spatial>
+          <dct:temporal eas:scheme="ABR" eas:schemeId="archaeology.dcterms.temporal">IJZL</dct:temporal>
+          <eas:spatial>
+            <eas:point eas:scheme="RD">
+              <eas:x>155000</eas:x>
+              <eas:y>463000</eas:y>
+            </eas:point>
+          </eas:spatial>
+          <eas:spatial>
+            <eas:box eas:scheme="RD">
+              <eas:north>1</eas:north>
+              <eas:east>3</eas:east>
+              <eas:south>4</eas:south>
+              <eas:west>2</eas:west>
+            </eas:box>
+          </eas:spatial>
+          <eas:spatial>
+            <eas:polygon eas:scheme="degrees"> <!-- a polygon should be skipped! -->
+              <eas:polygon-exterior>
+                <eas:polygon-point><eas:x>52.08110</eas:x><eas:y>4.34521</eas:y></eas:polygon-point>
+                <eas:polygon-point><eas:x>52.08071</eas:x><eas:y>4.34422</eas:y></eas:polygon-point>
+                <eas:polygon-point><eas:x>52.07913</eas:x><eas:y>4.34332</eas:y></eas:polygon-point>
+                <eas:polygon-point><eas:x>52.08110</eas:x><eas:y>4.34521</eas:y></eas:polygon-point>
+              </eas:polygon-exterior>
+            </eas:polygon>
+          </eas:spatial>
+        </emd:coverage>
+      </easymetadata>)
     expectEmptyXmlByDefault
 
     inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
       case Success(generator) =>
-        getSolrDocFieldValues(generator.toXml, "dc_coverage") should contain only (
+        getSolrDocFieldValues(generator.toXml, "dc_coverage") should contain only(
           "spatial1",
           "IJZL",
           "scheme=RD x=155000 y=463000",
@@ -361,8 +405,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
 
   "archaeology_dcterms_temporal" should "only get values from subject fields with corresponding schemeId attribute" in {
     expectEmd(
-      <easymetadata
-      xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
         <emd:coverage>
           <dcterms:temporal>some other temporal</dcterms:temporal>
           <dcterms:temporal eas:scheme="ABR" eas:schemeId="archaeology.dcterms.temporal">MESO</dcterms:temporal>
@@ -382,14 +425,13 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
   "dai_creator" should "get value from entityId field with scheme DAI in eas:creator" in {
     val CREATOR_DAI = "123456789"
     expectEmd(
-        <easymetadata
-        xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
-          <emd:creator>
-            <eas:creator>
-              <eas:entityId eas:scheme="DAI">{CREATOR_DAI}</eas:entityId>
-            </eas:creator>
-          </emd:creator>
-        </easymetadata>)
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+        <emd:creator>
+          <eas:creator>
+            <eas:entityId eas:scheme="DAI">{CREATOR_DAI}</eas:entityId>
+          </eas:creator>
+        </emd:creator>
+      </easymetadata>)
     expectEmptyXmlByDefault
 
     inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
@@ -401,8 +443,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
   "dai_contributor" should "get value from entityId field with scheme DAI in eas:contributor" in {
     val CONTRIBUTOR_DAI = "123456789"
     expectEmd(
-      <easymetadata
-      xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
         <emd:contributor>
           <eas:contributor>
             <eas:entityId eas:scheme="DAI">{CONTRIBUTOR_DAI}</eas:entityId>
@@ -423,8 +464,7 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
     val CONTRIBUTOR1_DAI = "4567890123"
     val CONTRIBUTOR2_DAI = "6789012345"
     expectEmd(
-      <easymetadata
-      xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
+      <easymetadata xmlns:eas="http://easy.dans.knaw.nl/easy/easymetadata/eas/">
         <emd:creator>
           <eas:creator>
             <eas:entityId eas:scheme="DAI">{CREATOR1_DAI}</eas:entityId>
@@ -582,19 +622,19 @@ class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with 
 
     expectRelsExt(
       <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-      <rdf:Description rdf:about="info:fedora/easy-dataset:5058">
-        <hasModel xmlns="info:fedora/fedora-system:def/model#" rdf:resource="info:fedora/easy-model:EDM1DATASET"></hasModel>
-        <hasModel xmlns="info:fedora/fedora-system:def/model#" rdf:resource="info:fedora/easy-model:oai-item1"></hasModel>
-        <hasDoi xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:parseType="Literal">10.5072/dans-zyf-v9sc</hasDoi>
-        <isMemberOfOAISet xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource="info:fedora/easy-data:oai-driverset1"></isMemberOfOAISet>
-        <isCollectionMember xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource={COLLECTION}></isCollectionMember>
-        <isMemberOfOAISet xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource="info:fedora/easy-discipline:14"></isMemberOfOAISet>
-        <itemID xmlns="http://www.openarchives.org/OAI/2.0/" rdf:parseType="Literal">oai:easy.dans.knaw.nl:easy-dataset:5058</itemID>
-        <hasPid xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:parseType="Literal">urn:nbn:nl:ui:13-o7dy-s5</hasPid>
-        <hasModel xmlns="info:fedora/fedora-system:def/model#" rdf:resource="info:fedora/dans-model:recursive-item-v1"></hasModel>
-        <isMemberOf xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource="info:fedora/easy-discipline:14"></isMemberOf>
-      </rdf:Description>
-    </rdf:RDF>)
+        <rdf:Description rdf:about="info:fedora/easy-dataset:5058">
+          <hasModel xmlns="info:fedora/fedora-system:def/model#" rdf:resource="info:fedora/easy-model:EDM1DATASET"></hasModel>
+          <hasModel xmlns="info:fedora/fedora-system:def/model#" rdf:resource="info:fedora/easy-model:oai-item1"></hasModel>
+          <hasDoi xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:parseType="Literal">10.5072/dans-zyf-v9sc</hasDoi>
+          <isMemberOfOAISet xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource="info:fedora/easy-data:oai-driverset1"></isMemberOfOAISet>
+          <isCollectionMember xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource={COLLECTION}></isCollectionMember>
+          <isMemberOfOAISet xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource="info:fedora/easy-discipline:14"></isMemberOfOAISet>
+          <itemID xmlns="http://www.openarchives.org/OAI/2.0/" rdf:parseType="Literal">oai:easy.dans.knaw.nl:easy-dataset:5058</itemID>
+          <hasPid xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:parseType="Literal">urn:nbn:nl:ui:13-o7dy-s5</hasPid>
+          <hasModel xmlns="info:fedora/fedora-system:def/model#" rdf:resource="info:fedora/dans-model:recursive-item-v1"></hasModel>
+          <isMemberOf xmlns="http://dans.knaw.nl/ontologies/relations#" rdf:resource="info:fedora/easy-discipline:14"></isMemberOf>
+        </rdf:Description>
+      </rdf:RDF>)
     expectEmptyXmlByDefault
 
     inside(SolrDocumentGenerator(fedora, "test-pid:123")) {
