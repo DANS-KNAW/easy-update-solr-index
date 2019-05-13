@@ -200,8 +200,20 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
   /* emd */
 
   lazy val emdDateMappings: List[(String, Seq[String])] = {
-    List("created", "available", "submitted", "published", "deleted")
+    val emdOrAmd = List("submitted", "published")
+      .map(s => s"emd_date_$s" -> getEasOrAmdDateElement(s).map(n => toUtcTimestamp(n.text)))
+
+    val emdOnly = List("created", "available", "deleted")
       .map(s => s"emd_date_$s" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
+
+    emdOrAmd ++ emdOnly
+  }
+
+  def getEasOrAmdDateElement(typeOfDate: String): NodeSeq = {
+    getEasDateElement(typeOfDate) match {
+      case Seq() => getAmdDateElement(typeOfDate)
+      case otherwise => otherwise
+    }
   }
 
   def getEasDateElement(typeOfDate: String): NodeSeq = {
@@ -214,6 +226,18 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
         NodeSeq.fromSeq(element)
       case e => e
     }
+  }
+
+  implicit private def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
+
+  def getAmdDateElement(typeOfDate: String): NodeSeq = {
+    val dates = (amd \ "stateChangeDates" \ "stateChangeDate")
+      .collect { case change if (change \ "toState").text.toLowerCase == typeOfDate => (change \ "changeDate").text }
+
+    if (dates.isEmpty)
+      NodeSeq.Empty
+    else
+      <node>{dates.maxBy(DateTime.parse)}</node>
   }
 
   def toUtcTimestamp(s: String): String = DateTime.parse(s).withZone(DateTimeZone.UTC).toString
