@@ -23,7 +23,7 @@
     <artifactId>easy-update-solr-index-build</artifactId>
     <version>1.3.5-SNAPSHOT</version>
 
-    <name>EASY Update SOLR Index Build</name>
+    <name>EASY Update SOLR Index Master Build</name>
     <description>Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.</description>
     <inceptionYear>2015</inceptionYear>
 
