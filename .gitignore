@@ -10,7 +10,7 @@
 *.class
 *~
 *.swp
-/*.iml
+*.iml
 *.sc
 /.idea/
 .DS_Store
