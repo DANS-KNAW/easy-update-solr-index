@@ -28,7 +28,7 @@
 
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-update-solr-index-lib</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1-SNAPSHOT</version>
 
     <name>EASY Update SOLR Index Library</name>
     <inceptionYear>2015</inceptionYear>
@@ -114,8 +114,4 @@
             <url>https://maven.dans.knaw.nl/snapshots/</url>
         </repository>
     </repositories>
-
-  <scm>
-    <tag>v2.0.0</tag>
-  </scm>
 </project>
