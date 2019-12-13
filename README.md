@@ -40,21 +40,15 @@ ARGUMENTS
 Note that the actual defaults (shown with `--help`) depend on the actual configuration.
 
 
+
 INSTALLATION AND CONFIGURATION
 ------------------------------
+Currently this project is built as an RPM package for RHEL7/CentOS7 and later. The RPM will install the binaries to
+`/opt/dans.knaw.nl/easy-update-solr-index` and the configuration files to `/etc/opt/dans.knaw.nl/easy-update-solr-index`. 
 
-
-1. Unzip the tarball to a directory of your choice, typically `/usr/local/`
-2. A new directory called easy-update-solr-index-<version> will be created
-3. Add the command script to your `PATH` environment variable by creating a symbolic link to it from a directory that is
-   on the path, e.g. 
-   
-        ln -s /usr/local/easy-update-solr-index-<version>/bin/easy-update-solr-index /usr/bin
-
-
-
-General configuration settings can be set in `cfg/application.properties` and logging can be configured
-in `cfg/logback.xml`. The available settings are explained in comments in aforementioned files.
+To install the module on systems that do not support RPM, you can copy and unarchive the tarball to the target host.
+You will have to take care of placing the files in the correct locations for your system yourself. For instructions
+on building the tarball, see next section.
 
 
 BUILDING FROM SOURCE
@@ -64,12 +58,20 @@ Prerequisites:
 
 * Java 8 or higher
 * Maven 3.3.3 or higher
+* RPM
 
 Steps:
 
         git clone https://github.com/DANS-KNAW/easy-update-solr-index.git
         cd easy-update-solr-index
-        mvn install
+        mvn clean install
 
+If the `rpm` executable is found at `/usr/local/bin/rpm`, the build profile that includes the RPM 
+packaging will be activated. If `rpm` is available, but at a different path, then activate it by using
+Maven's `-P` switch: `mvn -Pprm install`.
+
+Alternatively, to build the tarball execute:
+
+    mvn clean install assembly:single
 
 [Apache SOLR Service]: https://lucene.apache.org/solr/
