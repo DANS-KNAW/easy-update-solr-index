@@ -31,6 +31,7 @@ case class SolrProviderImpl(solrUrl: URL, userAgent: String) extends SolrProvide
       .header("Content-Type", "application/xml; charset=utf-8")
       .param("commit", "true")
       .postData(doc.getBytes(StandardCharsets.UTF_8))
+      .timeout(5000, 60000)
       .asString
 
     if (result.isError)
