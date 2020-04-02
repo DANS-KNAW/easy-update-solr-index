@@ -15,9 +15,10 @@
  */
 package nl.knaw.dans.easy.solr
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class IsoDateSpec extends FlatSpec with Matchers {
+class IsoDateSpec extends AnyFlatSpec with Matchers {
 
   "Precision YEAR" should "format date leaving off everything but year" in {
     IsoDate.format("2015-02-03T12:34:56.789", "YEAR") shouldBe "2015"

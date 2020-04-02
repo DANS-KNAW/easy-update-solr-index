@@ -20,9 +20,10 @@ import java.nio.file.Paths
 
 import nl.knaw.dans.easy.solr.command.CustomMatchers._
 import org.apache.commons.configuration.PropertiesConfiguration
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class CommandLineOptionsSpec extends FlatSpec with Matchers {
+class CommandLineOptionsSpec extends AnyFlatSpec with Matchers {
   private val resourceDirString: String = Paths.get(getClass.getResource("/").toURI).toAbsolutePath.toString
 
   private val mockedConfiguration = new Configuration("version x.y.z", new PropertiesConfiguration() {

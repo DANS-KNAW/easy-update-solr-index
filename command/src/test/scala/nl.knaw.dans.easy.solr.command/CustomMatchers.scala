@@ -16,6 +16,7 @@
 package nl.knaw.dans.easy.solr.command
 
 import java.io.File
+import java.nio.charset.StandardCharsets
 
 import org.apache.commons.io.FileUtils._
 import org.scalatest.matchers.{ MatchResult, Matcher }
@@ -27,7 +28,7 @@ trait CustomMatchers {
       def trimLines(s: String): String = s.split("\n").map(_.trim).mkString("\n")
 
       MatchResult(
-        trimLines(readFileToString(left)).contains(trimLines(content)),
+        trimLines(readFileToString(left, StandardCharsets.UTF_8)).contains(trimLines(content)),
         s"$left did not contain: $content",
         s"$left contains $content"
       )
