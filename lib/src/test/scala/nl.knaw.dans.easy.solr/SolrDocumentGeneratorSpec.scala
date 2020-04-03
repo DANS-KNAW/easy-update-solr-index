@@ -16,12 +16,14 @@
 package nl.knaw.dans.easy.solr
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest._
+import org.scalatest.Inside
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.Success
 import scala.xml._
 
-class SolrDocumentGeneratorSpec extends FlatSpec with Matchers with Inside with MockFactory {
+class SolrDocumentGeneratorSpec extends AnyFlatSpec with Matchers with Inside with MockFactory {
   /*
    * Mocking and helper functions.
    */
