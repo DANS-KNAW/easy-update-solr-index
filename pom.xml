@@ -21,7 +21,7 @@
 
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-update-solr-index-build</artifactId>
-    <version>2.0.2-SNAPSHOT</version>
+    <version>2.0.3</version>
 
     <name>EASY Update SOLR Index Master Build</name>
     <description>Update EASY's SOLR Search Index with metadata of datasets in EASY's Fedora Commons Repository.</description>
@@ -35,7 +35,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/DANS-KNAW/easy-update-solr-index</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v2.0.3</tag>
     </scm>
 
     <build>
