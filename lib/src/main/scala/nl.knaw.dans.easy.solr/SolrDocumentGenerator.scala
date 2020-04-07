@@ -200,10 +200,10 @@ abstract class SolrDocumentGenerator(pid: String) extends DebugEnhancedLogging {
   /* emd */
 
   lazy val emdDateMappings: List[(String, Seq[String])] = {
-    val emdOrAmd = List("submitted", "published")
+    val emdOrAmd = List("submitted", "published", "deleted")
       .map(s => s"emd_date_$s" -> getEasOrAmdDateElement(s).map(n => toUtcTimestamp(n.text)))
 
-    val emdOnly = List("created", "available", "deleted")
+    val emdOnly = List("created", "available")
       .map(s => s"emd_date_$s" -> getEasDateElement(s).map(n => toUtcTimestamp(n.text)))
 
     emdOrAmd ++ emdOnly
